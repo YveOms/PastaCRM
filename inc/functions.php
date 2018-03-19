@@ -2033,7 +2033,7 @@ function getMoneyValue(float $value = null){
  * o wygaslej sesji wraz z linkiem do logowania.
  * 
  * @param int $level - minimalny poziom uprawnien, aby zwrocic true
- * @version 1.0.1
+ * @version 1.0.2
  */
 function checkUserPermissions(int $level){
     $zapytanie = "SELECT `permission_level` FROM `users` WHERE `id_unique` LIKE '".@$_SESSION['JezusServerHome']."'";
@@ -2047,7 +2047,7 @@ function checkUserPermissions(int $level){
                 return false;
             }
         }else{
-            showError("Wygląda na to, że sesja logowania wygasła! Zaloguj się ponownie <a href='login.php'>tutaj</a>");
+            showError("Wygląda na to, że sesja logowania wygasła! Zaloguj się ponownie <a href='".WEB_ADDRESS."/login.php'>tutaj</a>");
             exit(0);
         }
     }else{
