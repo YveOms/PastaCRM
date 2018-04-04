@@ -74,11 +74,9 @@ if(checkUserPermissions(1) || checkUserPermissions(3)){
                             if($service_info['status'] == 1){
                                 $status_list = "<option value='1' selected>Ukończono</option>
                                                 <option value='0'>W trakcie pracy</option>";
-                                $generate_summary_switch = "disabled";
                             }else{
                                 $status_list = "<option value='1'>Ukończono</option>
                                                 <option value='0' selected>W trakcie pracy</option>";
-                                $generate_summary_switch = null;
                             }
                     ?>
                     <form method="post">
@@ -143,15 +141,9 @@ if(checkUserPermissions(1) || checkUserPermissions(3)){
                 </a>
                 <button type="submit" class="btn btn-success" name="edit_service"><i class="fa fa-save"></i> Zapisz</button>
                 <a href="computerServiceEdit.php?id_u=<?= $id_u ?>&status=deleteService">
-                    <button type="button" class="btn btn-danger pull-right" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i></button>
+                    <button type="button" class="btn btn-danger pull-right" onclick="return confirm('Jesteś pewien, że chcesz USUNĄĆ to zlecenie?')"><i class="fa fa-trash"></i></button>
                 </a>
-                
-                <a href="computerServiceGenerateSummary.php?id_u=<?= $id_u ?>">
-                    <button class="btn btn-warning btn-margin pull-right" <?= $generate_summary_switch?> type="button">
-                        <i class="fa fa-file-pdf-o"></i> Generuj plik podsumowania pracy
-                    </button>
-                </a>
-                
+
             </form>
         </div>
     </div>

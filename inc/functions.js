@@ -161,6 +161,48 @@ function deletePayment(mode, id_delete, id_work){
     }
 }
 
+/**
+ * Funkcja zmieniajaca kolejnosc oraz (jesli potrzeba) kategorie pozycji w cenniku.
+ * @param {object} element - wiersz w tabeli, ktory ma zostac przeniesiony,
+ * @param {int} direction - kierunek (gore oznacza 0 oraz liczby dodatnie, dol natomiast liczby ujemne),
+ * @param {int} id - identyfikator uslugi.
+ * @version 1.0.0
+ */
+function movePricingListItem(element, direction, id){
+    if(element != null && !isNaN(direction) && !isNaN(id)){
+        $.ajax({
+            url: "inc/ajax.php?f=movePricingListItem&id="+id+"&direction="+direction,
+            success:function(response){
+                console.log("Success: " + response);//DEBUG
+                switch (response) {
+                    case "OK":
+                        var row = $(element).parents("tr:first");
+                        var row_color = row.css("background");
+                        if(direction >= 0){
+                            row.insertBefore(row.prev());
+                        }else{
+                            row.insertAfter(row.next());
+                        }
+                        row.css({
+                            "background":"#9ACD32",
+                            "transition":"background-color 0.3s ease"
+                        });
+                        setTimeout(function(){
+                            row.css("background", row_color);
+                        }, 250);
+                        break;
+                
+                    default:
+                        break;
+                }
+            },
+            error:function(response){
+                console.error("Error: " + response);//DEBUG
+            }
+        });
+    }
+}
+
 /* ---------------------------------
  * 2. Inne funkcje JavaScript
  * --------------------------------- */
@@ -248,6 +290,17 @@ function showAddNewClientForm(display_id){
 }
 
 /**
+ * Funkcja wyswietlajaca formularz dodawania nowej uslugi do cennika
+ * @param {string} display_id - identyfikator div, w ktorym ma zostac wyswietlony
+ * formularz dodawania nowej uslugi
+ * @version 1.0.1
+ */
+function showAddNewService(display_id){
+    $("#"+display_id).css("display", "inline");
+    $("#show_new_service_button").css("display", "none");
+}
+
+/**
  * Funkcja sprawdzajaca, czy numer ma dwie cyfry. Jesli ma jedna, dopisuje
  * zero wiodace i zwraca numer dwucyfrowy.
  * @param {int} number 
@@ -327,6 +380,26 @@ function showSuccess(display_id, text){
 }
 
 /**
+ * Funkcja wyswietlajaca komunikat z informacja w miejscu, ktorego ID zostalo podane na wejsciu.
+ * @param {string} display_id  - identyfikator div lub innego elementu, w ktorym ma wyswietlic sie komunikat
+ * @param {string} text - tresc komunikatu informacyjnego
+ * @version 1.0.0
+ */
+function showInfo(display_id, text){
+    $("#"+display_id).html("<div class='alert alert-info alert-dismissable'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><i class='fa fa-fw fa-info-circle'></i>"+text+"</div>");
+}
+
+/**
+ * Funkcja wyswietlajaca komunikat z ostrzezeniem w miejscu, ktorego ID zostalo podane na wejsciu.
+ * @param {string} display_id  - identyfikator div lub innego elementu, w ktorym ma wyswietlic sie komunikat
+ * @param {string} text - tresc komunikatu z ostrzezeniem
+ * @version 1.0.0
+ */
+function showWarning(display_id, text){
+    $("#"+display_id).html("<div class='alert alert-warning alert-dismissable'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><i class='fa fa-fw fa-exclamation-triangle'></i> <strong>Uwaga!</strong><br>"+text+"</div>");
+}
+
+/**
  * Funkcja wyswietlajaca komunikat o bledzie w miejscu, ktorego ID zostalo podane na wejsciu.
  * @param {string} display_id  - identyfikator div lub innego elementu, w ktorym ma wyswietlic sie komunikat
  * @param {string} text - tresc komunikatu o bledzie podczas operacji
@@ -336,10 +409,9 @@ function showError(display_id, text){
     $("#"+display_id).html("<div class='alert alert-danger alert-dismissable'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><i class='fa fa-fw fa-exclamation-triangle'></i> <strong>UWAGA!</strong><br>"+text+"</div>");
 }
 
-
-/* ############################
- * # TODO
- * ############################
+/* ##############################
+ * # Funkcje w trakcie produkcji
+ * ##############################
 */
 
 /**
@@ -358,8 +430,82 @@ function setMenuActive() {
         "websitesEdit":"Strony Internetowe"
     };
 
-
     //alert(menu_select.file.val());
     /*var name = $("#menu_left").childNode.nodeValue;
     alert(name);*/
+}
+
+
+
+/*function deletePricingList(id){
+    if(confirm('Jesteś pewien, że chcesz USUNĄĆ tą usługę z cennika?')){
+        if(!isNaN(id)){
+            $.ajax({
+                url: "inc/ajax.php?f=deletePricingList&id="+id,
+                success:function(response){
+                    if(showResponse("display_alert", response)){
+                        console.log('TEST');
+                    }
+                },
+                error:function(response){
+                    showError("display_alert", "Podczas komunikacji z serwerem wystąpił błąd!");
+                }
+            });
+        }else{
+            showError("display_alert", "Wygląda na to, że identyfikator usługi jest nieprawidłowy! Usługa nie została usunięta!");
+        }
+    }
+}*/
+
+/**
+ * Funkcja sprawdza, czy string 'response' jest komunikatem typu alert, alert-warning, itd...
+ * Jestli tak, wyswietla odpowiedni komunikat w elemencie z odpowiednim id ('show_id').
+ * @param {string} show_id 
+ * @param {string} response 
+ */
+function showResponse(show_id, response){
+    var alert_type = null;
+    if(response.indexOf("<div class='alert") != -1){
+        if(response.indexOf("<div class='alert") == 0 && response.indexOf("</div>") == (response.length-6)){
+            if(response.indexOf("alert-danger") != -1)
+                alert_type = "danger";
+            if(response.indexOf("alert-warning") != -1)
+                alert_type = "warning";
+            if(response.indexOf("alert-info") != -1)
+                alert_type = "info";
+            if(response.indexOf("alert-success") != -1)
+                alert_type = "success";
+
+            if(alert_type){
+                response = response.replace("<div class='alert alert-danger'>", "");
+                response = response.replace("<div class='alert alert-success'>", "");
+                response = response.replace("<div class='alert alert-info'>", "");
+                response = response.replace("<div class='alert alert-warning'>", "");
+                response = response.replace("<i class='fa fa-fw fa-info-circle'></i>", "");
+                response = response.replace("<i class='fa fa-fw fa-exclamation-triangle'></i> <strong>UWAGA!</strong><br>", "");
+                response = response.replace("</div>", "");
+                switch (alert_type) {
+                    case "danger":
+                        showError(show_id, response);
+                        break;
+                    case "warning":
+                        showWarning(show_id, response);
+                        break;
+                    case "info":
+                        showInfo(show_id, response);
+                        break;
+                    case "success":
+                        showSuccess(show_id, response);
+                        break;
+                    default:
+                        break;
+                }
+                return true;
+            }
+        }
+    }
+    if(alert_type == null){
+        showError(div_id, "Serwer nie zwrócił prawidłowego komunikatu informacyjnego!");
+        return false;
+    }
 }

@@ -266,6 +266,60 @@ function addClient(array $client_data){
 }
 
 /**
+ * Funkcja dodajaca do cennika nowa usluge.
+ *
+ * @param array $pricing_data - tablica zawierajaca dane nowej uslugi:
+ * 1) name - nazwa dla nowej uslugi
+ * 2) description - opcjonalny krotki opis uslugi
+ * 3) price - cena (stala lub 'od do')
+ * 4) category - identyfikator kategorii uslugi
+ * @version 1.0.0
+ */
+function addPricingList(array $pricing_data){
+    foreach ($pricing_data as $key => &$value) {
+        $value = validate($value);
+    }
+    $errors = [];
+    if(strlen($pricing_data['name']) < 5)
+        $errors[] = "Nazwa usługi musi składać się przynajmniej z 5 znaków!";
+    if(!is_numeric($pricing_data['category']))
+        $errors[] = "Nieprawidłowy identyfikator kategorii dla nowej usługi!";
+
+    if(empty($errors)){
+        $zapytanie = "SELECT `position` FROM `pricing_list` WHERE `type` = ".$pricing_data['category']." ORDER BY `position` DESC LIMIT 1 ";
+        $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+        if($query){
+            if(mysqli_num_rows($query) > 0){
+                $r = mysqli_fetch_array($query);
+                $position = $r['position']+1;
+            }else{
+                $position = 1;
+            }
+        }else{
+            $errors[] = "Wystąpił błąd podczas określania pozycji na liście dla nowej usługi!";
+        }
+    }
+
+    if(empty($errors)){
+        if(strpos($pricing_data['price'], "-") !== false){
+            $splited_price = explode("-", $pricing_data['price']);
+            $zapytanie = "INSERT INTO `pricing_list` (`position`, `service_name`, `description`, `value_default`, `value_resizable`, `value_min`, `value_max`, `type`) VALUES ('".$position."', '".$pricing_data['name']."', '".$pricing_data['description']."', NULL, 1, ".$splited_price[0].", ".$splited_price[1].", ".$pricing_data['category'].")";
+        }else{
+            $zapytanie = "INSERT INTO `pricing_list` (`position`, `service_name`, `description`, `value_default`, `value_resizable`, `value_min`, `value_max`, `type`) VALUES ('".$position."', '".$pricing_data['name']."', '".$pricing_data['description']."', ".$pricing_data['price'].", 0, NULL, NULL, ".$pricing_data['category'].")";
+        }
+        $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+        if($query){
+            showSuccess("Pomyślnie dodano nową usługę!");
+        }else{
+            showError("Podczas dodawania nowej usługi wystąpił nieznany błąd!<br>Jeśli problem będzie się powtarzał skontaktuj się z administratorem systemu!");
+            addToLog(2, "Podczas dodawania nowej usługi do cennika baza danych MySQL zwróciła błąd!");
+        }
+    }else{
+        showError("Podczas dodawania nowej usługi do cennika wystąpiły następujące błedy:<ul><li>".implode("</li><li>", $errors)."</li></ul>");
+    }
+}
+
+/**
  * AJAX
  * Funkcja dodaje do bazy nowa platnosc. Platnosc dodawana jest do kategorii zaleznej od otrzymanego parametru.
  *
@@ -491,6 +545,147 @@ function editClient(array $client_data){
 }
 
 /**
+ * Funkcja zapisujaca zmiany w cenniku. Dane sa walidowane na wejsciu.
+ * W jednej petli wykonywane sa dwa zapytania do bazy danych:
+ * 1) Zapisanie nazwy oraz opisu dla uslugi z danym ID
+ * 2) Zapisanie nowej ceny (stalej lub z przedzialu 'od do') dla uslugi z danym ID
+ * W razie bledu podczas zapisywania wyswietlany zostaje odpowiedni komunikat (czesc danych zostaje zapisana, czesc nie).
+ *
+ * @param array $service_name
+ * @param array $service_description
+ * @param array $service_price
+ * @version 1.0.1
+ */
+function editPricingList(array $service_name, array $service_description, array $service_price){
+    if(count($service_name) == count($service_description) && count($service_description) == count($service_price)){
+
+        $zapytania = [];
+        foreach ($service_name as $key => $value) {
+            $value = validate($value);
+            $zapytania[] = "UPDATE `pricing_list` SET `service_name` = '".$value."' WHERE `pricing_list`.`id` = ".$key;
+        }
+        foreach ($service_description as $key => $value) {
+            $value = validate($value);
+            $zapytania[] = "UPDATE `pricing_list` SET `description` = '".$value."' WHERE `pricing_list`.`id` = ".$key;
+        }
+        foreach ($service_price as $key => $value) {
+            $value = validate($value);
+            if(strpos($value, "-") !== false){
+                $splited_price = explode("-", $value);
+                $zapytania[] = "UPDATE `pricing_list` SET `value_resizable` = 1, `value_min` = ".$splited_price[0].", `value_max` = ".$splited_price[1]." WHERE `pricing_list`.`id` = ".$key;
+            }else{
+                $zapytania[] = "UPDATE `pricing_list` SET `value_resizable` = 0, `value_default` = ".$value." WHERE `pricing_list`.`id` = ".$key;
+            }
+        }
+
+        $error = false;
+        for($i = 0; $i<sizeof($zapytania); $i++){
+            $query = mysqli_query($GLOBALS['polaczenie'], $zapytania[$i]);
+            if(!$query){
+                $error = true;
+            }
+        }
+        
+        if(!$error){
+            showSuccess("Zmiany w cenniku zostały zapisane!");
+        }else{
+            showError("Podczas zapisywania nowych danych cennika wystąpił błąd!<br>Część danych została zapisana, część nie. Sprawdź, czy cennik nie uległ uszkodzeniu!<br>Jeśli problem będzie się powtarzał, skontaktuj się z administratorem systemu!");
+            addToLog(2, "Podczas zapisywania cennika wystąpił błąd![br]Dane w cenniku mogły ulec uszkodzeniu!");
+        }
+
+    }else{
+        showError("Podana ilość danych do zapisu nie zgadza się! (różna ilość usług, opisów lub cen)<br>Jeśli problem będzie się powtarzał, skontaktuj się z administratorem systemu!");
+    }
+}
+
+/**
+ * AJAX
+ * Funkcja zmieniajaca pozycje danej uslugi w bazie danych.
+ * W przypadku pomyslnej edycji funkcja wyswietla 'OK' i zwraca true. W innym przypadku funkcja zwraca blad oraz false.
+ * @param integer $id
+ * @param integer $direction - zero oraz wartosci dodatnie oznaczaja w gore, ujemne oznaczaja w dol.
+ * @version 1.0.0
+ */
+function movePricingListItem(int $id, int $direction){
+    if(is_numeric($id) && is_numeric($direction)){
+        $zapytanie = "SELECT `position`, `type` FROM `pricing_list` WHERE `id` = ".$id;
+        $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+        if($query){
+            $r_first = mysqli_fetch_array($query);
+            $zapytanie = "SELECT `position` AS 'MAX_POZYCJA', `type` AS 'MAX_TYP' FROM `pricing_list` WHERE `type` = (SELECT MAX(`id`) AS 'MAX_ID' FROM `pricing_list_types` ) ORDER BY `position` DESC LIMIT 1 ";
+            $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+            if($query){
+                $r_max = mysqli_fetch_array($query);
+                if($r_first['type'] == 1 && $r_first['position'] == 1 && $direction >= 0
+                || $r_first['type'] == $r_max['MAX_TYP'] && $r_first['position'] >= $r_max['MAX_POZYCJA'] && $direction < 0){
+                    echo "ERR_MAX_POSITION";
+                }else{
+                    $done = false;
+                    if($direction >= 0){ // W gore
+                        if($r_first['position'] == 1){ // Przejscie pomiedzy kategoriami
+                            $zapytanie = "SELECT MAX(`position`) AS 'MAX_POZYCJA' FROM `pricing_list` WHERE `type` = ".($r_first['type']-1);
+                            if($r = mysqli_fetch_array(mysqli_query($GLOBALS['polaczenie'], $zapytanie))){
+                                $zapytanie = "UPDATE `pricing_list` SET `position` = ".($r['MAX_POZYCJA']+1).", `type` = ".($r_first['type']-1)." WHERE `id` = ".$id;
+                                if(mysqli_query($GLOBALS['polaczenie'], $zapytanie)){
+                                    $zapytanie = "UPDATE `pricing_list` SET `position` = (`position`-1) WHERE `position` > ".$r_first['position']." AND `type` = ".$r_first['type'];
+                                    if(mysqli_query($GLOBALS['polaczenie'], $zapytanie)){
+                                        $done = true;
+                                    }
+                                }
+                            }
+                        }else{ // Brak przejscia pomiedzy kategoriami
+                            $zapytanie = "UPDATE `pricing_list` SET `position` = (`position`+1) WHERE `position` = ".($r_first['position']-1)." AND `type` = ".$r_first['type'];
+                            if(mysqli_query($GLOBALS['polaczenie'], $zapytanie)){
+                                $zapytanie = "UPDATE `pricing_list` SET `position` = (`position`-1) WHERE `id` = ".$id;
+                                if(mysqli_query($GLOBALS['polaczenie'], $zapytanie)){
+                                    $done = true;
+                                }
+                            }
+                        }
+                    }else{ // W dol
+                        $zapytanie = "SELECT MAX(`position`) AS 'MAX_POZYCJA' FROM `pricing_list` WHERE `type` = ".$r_first['type'];
+                        $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+                        if($query){
+                            $r = mysqli_fetch_array($query);
+                            if($r_first['position'] == $r['MAX_POZYCJA']){ // Przejscie pomiedzy kategoriami
+                                $zapytanie = "UPDATE `pricing_list` SET `position` = (`position`+1) WHERE `type` = ".($r_first['type']+1);
+                                if(mysqli_query($GLOBALS['polaczenie'], $zapytanie)){
+                                    $zapytanie = "UPDATE `pricing_list` SET `position` = 1, `type` = ".($r_first['type']+1)." WHERE `id` = ".$id;
+                                    if(mysqli_query($GLOBALS['polaczenie'], $zapytanie)){
+                                        $done = true;
+                                    }
+                                }
+                            }else{ // Brak przejscia pomiedzy kategoriami
+                                $zapytanie = "UPDATE `pricing_list` SET `position` = (`position`-1) WHERE `position` = ".($r_first['position']+1)." AND `type` = ".$r_first['type'];
+                                if(mysqli_query($GLOBALS['polaczenie'], $zapytanie)){
+                                    $zapytanie = "UPDATE `pricing_list` SET `position` = (`position`+1) WHERE `id` = ".$id;
+                                    if(mysqli_query($GLOBALS['polaczenie'], $zapytanie)){
+                                        $done = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if($done){
+                        echo "OK";
+                        return true;
+                    }else{
+                        echo "ERR_SET_NEW_POSITION";
+                    }
+                }
+            }else{
+                echo "ERR_GET_MAX_POSITION";
+            }
+        }else{
+            echo "ERR_GET_POSITION";
+        }
+    }else{
+        echo "ERR_BAD_VALUES";
+    }
+    return false;
+}
+
+/**
  * Funkcja odpowiada za walidacje oraz wyslanie pliku na serwer.
  * Domyslnie do kazdego nowego pliku w katalogu dopisywany jest jego numer oraz data i godzina wyslania
  * np. '001 - 2018-01-21 21:45:10 - plik.pdf'. Jesli jednak skrypt wykryje, ze CMS pracuje pod kontrola
@@ -601,8 +796,8 @@ function deleteUser(string $id_u){
 }
 
 /**
+ * AJAX
  * Funkcja usuwajaca platnosc o podanym ID.
- * Wywolywana za pomoca AJAX.
  *
  * @param int $id - id platnosci, ktora ma zostac usunieta.
  * @version 1.0.0
@@ -617,6 +812,42 @@ function deletePayment(int $id){
             echo "ERR_QUERY";
     }else{
         echo "ERR_WRONG_ID";
+    }
+}
+
+/**
+ * Funkcja usuwajaca pozycje z cennika. Po usunieciu automatycznie ustawia nowe pozycje dla wszystkich innych uslug w danej kategorii.
+ *
+ * @param integer $id
+ * @version 1.0.0
+ */
+function deletePricingList(int $id){
+    if(is_numeric($id)){
+        $zapytanie = "SELECT `position`, `type` FROM `pricing_list` WHERE `id` = ".$id;
+        $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+        if($query){
+            $r = mysqli_fetch_array($query);
+            $zapytanie = "DELETE FROM `pricing_list` WHERE `pricing_list`.`id` = ".$id;
+            $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+            if($query){
+                $zapytanie = "UPDATE `pricing_list` SET `position` = (`position`-1) WHERE `type` = ".$r['type']." AND `position` > ".$r['position'];
+                $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+                if($query){
+                    showSuccess("Usługa została usunięta z cennika!");
+                }else{
+                    showError("Podczas usuwania usługi wystąpił nieznany błąd!<br>Jeśli problem będzie się powtarzał skontaktuj się z administratorem systemu!");
+                    addToLog(2, "Podczas usuwania usługi z id = ".$id." baza danych MySQL zwróciła błąd! (kod: x79)");
+                }
+            }else{
+                showError("Podczas usuwania usługi wystąpił nieznany błąd!<br>Jeśli problem będzie się powtarzał skontaktuj się z administratorem systemu!");
+                addToLog(2, "Podczas usuwania usługi z id = ".$id." baza danych MySQL zwróciła błąd! (kod x58)");
+            }
+        }else{
+            showError("Podczas pobierania pozycji w cenniku wystąpił nieznany błąd!<br>Jeśli problem będzie się powtarzał skontaktuj się z administratorem systemu!");
+            addToLog(2, "Podczas pobierania pozycji dla id = ".$id." baza danych MySQL zwróciła błąd!");
+        }
+    }else{
+        showError("Nieprawidłowy identyfikator usługi!");
     }
 }
 
@@ -755,6 +986,20 @@ function deleteDirectory(string $dir){
 /* ########################################
  * # 1d. Wyswietlanie danych
  * ######################################## */
+
+/**
+ * Funkcja przyjmujaca wartosc liczbowa, i zwracajaca ta wartosc w poprawnej
+ * notacji pieniedzy, tj. 10,00, 15,99, itd...
+ *
+ * @param float $value
+ * @version 1.0.0
+ */
+function getMoneyValue(float $value = null){
+    if($value)
+        return number_format((float)$value, 2);
+    else
+        return false;
+}
 
 /**
  * Funkcja zwracajaca tablice z danymi konkretnej strony internetowej.
@@ -952,19 +1197,21 @@ function getUserLogin(string $id_u){
  * Nowe pozycje dodawac TYLKO na koncu tablicy.
  *
  * @param integer $number
- * @version 1.0.1
+ * @version 1.0.2
  */
 function getCmsName(int $number = null){
-    $cms = array("Statyczny HTML (brak CMS)", "PastaCMS", "Wordpress", "Joomla", "Drupal",
+    $cms = [
+        "Nieznany", "Statyczny HTML (brak CMS)", "Indywidualny CMS", "Wordpress", "Joomla", "Drupal",
         "Magento", "Blogger", "Shopify", "Bitrix", "TYPO3", "Squarespace", "PrestaShop",
-        "MyBB", "vBulletin", "phpBB");
+        "MyBB", "vBulletin", "phpBB"
+    ];
     if($number !== null){
         if(!empty($cms[$number]))
             return $cms[$number];
         else
             return "Nieznany";
     }else{
-        return sizeof($cms)+1;
+        return sizeof($cms);
     }
 }
 
@@ -974,15 +1221,15 @@ function getCmsName(int $number = null){
  * Jesli funkcja zostanie wywolana bez parametru, zwraca laczna ilosc staelementow tablicy.
  *
  * @param integer $number
- * @version 1.0.0
+ * @version 1.0.1
  */
 function getStatusName(int $number = null){
-    $status = array(
+    $status = [
         /*0*/ "W trakcie produkcji",
         /*1*/ "Ukończono (bez administrowania)",
         /*2*/ "Aktualnie administrowana",
         /*3*/ "Porzucono"
-    );
+    ];
     if($number !== null){
         if(!empty($status[$number]))
             return $status[$number];
@@ -999,14 +1246,14 @@ function getStatusName(int $number = null){
  * Jesli funkcja zostanie wywolana bez parametru, zwraca laczna ilosc elementow tablicy.
  *
  * @param integer $number
- * @version 1.0.0
+ * @version 1.0.1
  */
 function getServerTypeName(int $number = null){
-    $status = array(
+    $status = [
         /*0*/ "Hosting",
         /*1*/ "Dedykowany serwer",
         /*2*/ "Inny (podaj w opisie serwera)",
-    );
+    ];
     if($number !== null){
         if(!empty($status[$number]))
             return $status[$number];
@@ -1023,15 +1270,15 @@ function getServerTypeName(int $number = null){
  * Jesli funkcja zostanie wywolana bez parametru, zwraca laczna ilosc elementow tablicy.
  *
  * @param integer $number
- * @version 1.0.0
+ * @version 1.0.1
  */
 function getUserPermissionName(int $number = null){
-    $status = array(
+    $status = [
         /*0*/ "Użytkownik",
         /*1*/ "Serwisant Komputerowy",
         /*2*/ "Administrator Stron Internetowych",
         /*3*/ "Administrator Globalny"
-    );
+    ];
     if($number !== null){
         if(!empty($status[$number]))
             return $status[$number];
@@ -1060,6 +1307,26 @@ function getServerList(){
         return $servers;
     }else{
         showError("Podczas tworzenia listy dostępnych serwerów wystąpił błąd!");
+    }
+}
+
+/**
+ * Funkcja zwracajaca tablice zawierajaca znajdujace sie w bazie typy uslug dla cennika.
+ *
+ * @return array $types
+ * @version 1.0.0
+ */
+function getPricingListTypesList(){
+    $zapytanie = "SELECT `id`, `name` FROM `pricing_list_types` ";
+    $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+    if($query){
+        for($i=0; $i<mysqli_num_rows($query); $i++){
+            $r = mysqli_fetch_array($query);
+            $types[] = $r['name'];
+        }
+        return $types;
+    }else{
+        showError("Podczas tworzenia listy dostępnych typów wystąpił błąd!");
     }
 }
 
@@ -1511,25 +1778,21 @@ function showSiteLog(){
  * Jesli zmienna editable = true, dane zostana wyswietlone w formie input'ow.
  *
  * @param boolean $editable
- * @version 1.0.0
+ * @version 1.0.3
  */
 function showPricingList(bool $editable){
     $VAT = 1.23;
-    $categories = [
-        "Systemy operacyjne",
-        "Laptopy",
-        "Sieci komputerowe",
-        "Strony internetowe",
-        "Pozostałe"
-    ];
+    $categories = getPricingListTypesList();
     echo "<table class='table table-striped table-hover table-bordered' id='pricing_table'>";
     for($i=0; $i<sizeof($categories); $i++){
         echo "<tr class='active'>
                 <th>".$categories[$i]."</th>
                 <th class='text-right' style='width: 115px'>Netto</th>
-                <th class='text-right' style='width: 115px'>Brutto</th>
-            </tr>";
-        $zapytanie = "SELECT * FROM `pricing_list` WHERE `type` LIKE '".$categories[$i]."'";
+                <th class='text-right' style='width: 115px'>Brutto</th>";
+        if($editable)
+            echo "<th style='width: 45px;'></th>";
+        echo "</tr>";
+        $zapytanie = "SELECT * FROM `pricing_list` WHERE `type` = ".($i+1)." ORDER BY `position` ASC";
         $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
         if($query){
             for($x=0; $x<mysqli_num_rows($query); $x++){
@@ -1537,21 +1800,26 @@ function showPricingList(bool $editable){
                 echo "<tr>
                         <td>";
                     if($editable){
-                        echo "<input type='text' class='form-control input-sm' value='".$r['service_name']."' id='name-".$i."-".$x."'>
-                                <textarea class='form-control input-sm' placeholder='Opis...' maxlength='200' id='description-".$i."-".$x."'>".$r['description']."</textarea>";
+                        echo "<input type='text' class='form-control input-sm' value='".$r['service_name']."' name='service_name[".$r['id']."]'>
+                                <textarea class='form-control input-sm' placeholder='Opis...' maxlength='200' name='service_description[".$r['id']."]'>".$r['description']."</textarea>";
                     }else{
-                        echo $r['service_name']."<br><i>".$r['description']."</i>";
+                        echo $r['service_name']."<br><i>".bbCode($r['description'])."</i>";
                     }
                     echo "</td>";
                     
                     if($editable){
                         if($r['value_resizable'] == 0){
-                            echo "<td class='warning'><input type='text' class='form-control input-sm' value='".$r['value_default']."' id='price-".$i."-".$x."'></td>
+                            echo "<td class='warning'><input type='text' class='form-control input-sm' value='".$r['value_default']."' name='service_price[".$r['id']."]'></td>
                                 <td class='success'><input type='text' class='form-control input-sm' value='AUTO' disabled></td>";
                         }else{
-                            echo "<td class='warning'><input type='text' class='form-control input-sm' value='".$r['value_min']." - ".$r['value_max']."' id='price-".$i."-".$x."'></td>
+                            echo "<td class='warning'><input type='text' class='form-control input-sm' value='".$r['value_min']." - ".$r['value_max']."' name='service_price[".$r['id']."]'></td>
                                 <td class='success'><input type='text' class='form-control input-sm' value='AUTO' disabled></td>";
                         }
+                        echo "<td>
+                                <a class='btn btn-primary btn-xs up' type='button' onclick='movePricingListItem(this, 1, ".$r['id'].")'><i class='fa fa-fw fa-arrow-up'></i></a>
+                            <br><a class='btn btn-primary btn-xs down' type='button' onclick='movePricingListItem(this, -1, ".$r['id'].")'><i class='fa fa-fw fa-arrow-down'></i></a>
+                            <br><a href='?delete=".$r['id']."' class='btn btn-danger btn-xs' type='button' onclick='return confirm(\"Jesteś pewien, że chcesz USUNĄĆ tą usługę?\");'><i class='fa fa-fw fa-trash'></i></a>
+                            </td>";
                     }else{
                         if($r['value_resizable'] == 0){
                             echo "<td class='warning text-right'>".getMoneyValue((float)$r['value_default'])." zł</td>
@@ -2013,19 +2281,7 @@ function validate(string $text = null, int $mode = null){
     }
 }
 
-/**
- * Funkcja przyjmujaca wartosc liczbowa, i zwracajaca ta wartosc w poprawnej
- * notacji pieniedzy, tj. 10,00, 15,99, itd...
- *
- * @param float $value
- * @version 1.0.0
- */
-function getMoneyValue(float $value = null){
-    if($value)
-        return number_format((float)$value, 2);
-    else
-        return false;
-}
+
 
 /**
  * Funkcja sprawdzajaca, czy aktualnie zalogowany uzytkownik ma odpowiednie uprawnienia.
@@ -2200,11 +2456,12 @@ function checkFolderPermissions(){
 }
 
 /**
+ * AJAX
  * Funkcja logujaca do systemu. Najpierw sprawdza, czy podany uzytkownik istnieje
  * w bazie danych. Jesli tak, sprawdza podane haslo. Jesli wszystko sie zgadza,
  * do sesji JezusServerHome przypisane zostaje unikatowe id uzytkownika a sam
  * uzytkownik zostaje zalogowany.
- * Funkcja wywolywana glownie przez AJAX z pliku login.php.
+ * Funkcja wywolywana przez AJAX z pliku login.php.
  * 
  * @param string $login
  * @param string $password

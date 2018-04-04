@@ -1,6 +1,6 @@
 <?php
 /*
- * UWAGA! Ta strona wyswietla sam cennik bez mozliwosci nawigacji po PastaCMS!
+ * UWAGA! Ta strona wyswietla sam cennik bez mozliwosci nawigacji po PastaCRM!
  * Uzywana na potrzeby aplikacji "Cennik" dla systemu Android.
  */
 require_once("inc/functions.php");
@@ -25,6 +25,9 @@ $key = "[UNIKALNY KOD ID]";
     
     <!-- Bootstrap Core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="fonts/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     
     <style>
         h1{
@@ -50,14 +53,14 @@ $key = "[UNIKALNY KOD ID]";
         <?php
             if($android_ID === $key){ // Android Unique ID
                 showInfo("Podane ceny nie zawierają kosztów podzespołów (w przypadku kosztów serwisowania sprzętu)
-                        <br/>Podane ceny są cenami <b>netto</b> oraz <b>brutto</b>.");
+                        <br>Podane ceny są cenami <b>netto</b> oraz <b>brutto</b>.");
                 showPricingList(false);
             }else{
                 showError("Nie masz dostepu do tych danych!<br>Pobierz aplikację Cennik, a następnie uwierzytelnij swoje urządzenie.<br>Możesz to zrobić kontaktując się z administratorem.");
             }
         ?>
         <div class="alert alert-info">
-            <a href="downloads/Cennik_1.3.apk" class="alert-link">Pobierz aplikację "Cennik.apk"</a>
+            <a href="downloads/Cennik.apk" class="alert-link">Pobierz aplikację "Cennik.apk"</a>
         </div>
     </div>
     <!-- KONIEC STRONY -->
