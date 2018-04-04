@@ -24,6 +24,9 @@ if($f){
                 case "deletePayment":
                     deletePayment($_GET['id']);
                     break;
+                case "movePricingListItem":
+                    movePricingListItem($_GET['id'], $_GET['direction']);
+                    break;
                 default:
                     return false;
                     break;

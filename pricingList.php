@@ -1,7 +1,7 @@
 <?php
 @session_start();
 require_once("inc/functions.php");
-if(checkUserPermissions(3)){
+if(checkUserPermissions(1) || checkUserPermissions(2) ||checkUserPermissions(3)){
     $siteTitle = "Cennik";
 ?>
 <!DOCTYPE html>

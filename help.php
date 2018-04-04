@@ -1216,6 +1216,10 @@ add_filter('script_loader_tag', 'wpzen_async_scripts', 10, 3);
                                     <li>użytkownik ma mieć prawo do dystrybucji kopii programu za darmo lub za opłatą</li>
                                     <li>użytkownik ma mieć prawo do dystrybucji zmodyfikowanych wersji</li>
                                 </ul>
+                                <hr>
+                                <ul>
+                                    <li>stopka strony nie musi posiadać tzw. 'credits' (chyba, że layout został kupiony, zaprogramowany na specjalne potrzeby lub layout ma dwie wersje - premium i bezpłatną. Wtedy należy skontaktować się z autorem bądź prawnikiem)</li>
+                                </ul>
                             </div>
                             <div class="alert alert-danger">
                                 <b>Czego NIE MOŻNA robić?</b>

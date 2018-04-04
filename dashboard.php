@@ -53,7 +53,7 @@ if(checkUserPermissions(3)){
             <h3 class="panel-title"><i class="fa fa-fw fa-external-link"></i> Na skróty</h3>
         </div>
         <div class="panel-body">
-            <a href="https://analytics.google.com/analytics/web/" target="_blank" class="btn btn-default btn-square" rel="nofollow">
+            <a href="https://360suite.google.com/overview/home" target="_blank" class="btn btn-default btn-square" rel="nofollow">
                 <img src="img/svg/google_analitics.svg" alt="icon">
                 <br>Google Analitics
             </a>
