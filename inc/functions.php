@@ -27,10 +27,12 @@
  * =
  * = = = = = = = = = = = = = = = = = =
  */
-
-error_reporting(0);
 @session_start();
 @require_once("config.php");
+
+if(!DEBUG)
+    error_reporting(0);
+
 /**
  * Funkcja sprawdzajaca wersje PHP dzialajaca na serwerze.
  * W przypadku nieobslugiwanej wersji wyswietla blad, a nastepnie konczy dzialanie skryptu.
@@ -1097,7 +1099,7 @@ function getServerData(string $id){
 }
 
 /**
- * Funkcja zwracajaca tablice zawierajaca dane klienta o podanym na wejsciu identyfikatorze.
+ * Funkcja zwracajaca tablice zawierajaca dane klienta o podanym na wejsciu identyfikatorze oraz statystyki dla danego klienta.
  * W przypadku braku parametru funkcja nie zwroci nic.
  *
  * @param string $id - unikalny identyfikator lub identyfikator liczbowy klienta.
@@ -1331,6 +1333,81 @@ function getPricingListTypesList(){
 }
 
 /**
+ * Funkcja zwracajaca wyniki ankiety.
+ * Raz w ciagu dnia laczy sie z zewnetrznym API na serwerze, pobiera wyniki ankiety oraz zapisuje ich kopie jako pliki *json.
+ * Jesli danego dnia wyniki zostaly juz pobrane, funkcja zwraca kopie wynikow z lokalnych plikow *json.
+ * 
+ * @param string $mode - okresla jakie dane ma zwrocic API (websites, computer_service, other). W przypadku null API zwroci wyniki dla wszystkich kategorii.
+ * @version 1.0.0
+ */
+function getPollResults(string $mode){
+    $available_modes = [
+        "all_satisfaction",
+        "all_votes_count",
+        "all_votes_by_category_count",
+
+        "websites_satisfaction",
+        "websites_votes_count",
+        "websites_time",
+        "websites_quality",
+        "websites_communication",
+        "websites_price",
+        "websites_additional_comment",
+
+        "computer_service_satisfaction",
+        "computer_service_votes_count",
+        "computer_service_time",
+        "computer_service_quality",
+        "computer_service_communication",
+        "computer_service_price",
+        "computer_service_additional_comment",
+
+        "other_satisfaction",
+        "other_votes_count",
+        "other_time",
+        "other_quality",
+        "other_communication",
+        "other_price",
+        "other_additional_comment"
+    ];
+
+    if(in_array($mode, $available_modes)){
+        if(!file_exists("temp/".$mode.".json")){
+            file_put_contents("temp/".$mode.".json", "");
+        }
+        $last_dl_date = substr(file_get_contents("temp/".$mode.".json"), 0, 10);
+        if($last_dl_date != date("Y-m-d")){
+            // Pobranie nowych danych
+            $data = file_get_contents(API_LINK."?key=".API_KEY."&mode=".$mode);
+            if($data){
+                switch ($data) {
+                    case "ERR_INPUT":
+                        showError("API otrzymało nieprawidłowe dane wejścia!");
+                    case "ERR_PASSWD":
+                        showError("Nierpawidłowy klucz dostępu API!");
+                        break;
+                    case "ERR_MODE":
+                        showError("Nieprawidłowy tryb wywołania API!");
+                        break;
+                    case "ERR_CONN":
+                        showError("API nie mogło połączyć się z serwerem ankietowym!");
+                        break;
+                    case "ERR_DATA":
+                        showError("Wystąpił błąd podczas generowania danych!");
+                        break;
+                    default:
+                        $save_json = file_put_contents("temp/".$mode.".json", date("Y-m-d").$data);
+                        break;
+                }
+            }
+        }
+        return json_decode(substr(file_get_contents("temp/".$mode.".json"), 10));
+    }else{
+        showError("Nieprawidłowy tryb! Dostępne tryby to: '".implode("', '", $available_modes)."'.");
+    }
+}
+
+/**
  * Funkcja generujaca i wyswietlajaca wykres przy uzyciu biblioteki ChartJS.
  * Obsluguje wyswietlanie kilu typow wykresow.
  * Jesli kolorystyka wykresu zostanie podana w RGB, to ostatnia wartosc (przezroczystosc),
@@ -1342,25 +1419,39 @@ function getPricingListTypesList(){
  * @param array $labels - opis poszczegolnych danych
  * @param array $colors_border - dodatkowa tablica zawierajaca kolorystyke wykresu. Jesli 'null', do wykres otrzyma jeden z kilku domyslnych zestawow kolorystycznych.
  * Kolory moga zostac podane zarowno w zapisie kodu HTML ('$FFF000'), jak i RGB ('rgba(75, 192, 192, 0.2)').
- * @version 1.0.0
+ * @param string $additional_options - dodatkowe mozliwosci wyswietlenia wykresu:
+ * a) Polozenie legendy: 'top' (domyslnie), 'bottom', 'right', 'left' oraz 'none'.
+ * b) Wyswietlanie danych: 'numbers' (domyslne) lub 'percent'.
+ * @version 1.0.1
  */
-function showChart(string $type, string $title, array $data, array $labels, array $colors_border = null){
-    $errors = array();
-    if($type != "pie" && $type != "doughnut" && $type != "lineSoft" && $type != "lineSharped" && $type != "bar" && $type != "horizontalBar"){
-        $errors[] = "Nieprawidłowy tryb! Dostępne tryby: 'pie', 'doughnut', 'lineSoft', 'lineSharped', 'bar', 'horizontalBar'.";
+function showChart(string $type, string $title, array $data, array $labels, array $colors_border = null, string $additional_options = null){
+    $errors = [];
+    $available_modes = ["pie", "doughnut", "lineSoft", "lineSharped", "bar", "horizontalBar"];
+    $available_options = ["numbers", "percent", "top", "bottom", "right", "left", "none"];
+
+    if(!in_array($type, $available_modes))
+        $errors[] = "Nieprawidłowy tryb! Dostępne tryby: ".implode(", ", $available_modes).".";
+
+    if($additional_options){
+        $options = explode(",", str_replace(" ", "", $additional_options));
+        if(count(array_intersect($options, $available_options)) != count($options))
+            $errors[] = "Przynajmniej jedna z wybranych opcji dodatkowych jest nieprawidłowa! Dostępne opcje: ".implode(", ", $available_options).".";
     }
+    
     if(sizeof($data) != sizeof($labels))
             $errors[] = "Ilość danych oraz ilość opisów nie zgadzają się!";
-    if(!empty($colors_border)){
+
+    if(!empty($colors_border))
         if(sizeof($data) != sizeof($colors_border))
             $errors[] = "Ilość kolorów dla kategorii oraz ilość kategorii nie zgadzają się!";
-    }
+
     if(sizeof($data) > 19)
         $errors[] = "Za dużo danych! Maksymalna ilość to 19 elementów!";
     
     if(empty($errors)){
         $random_id = md5(uniqid());
-        $colors_default = array(
+
+        $colors_default = [
             "#F44336,#E91E63,#9C27B0,#673AB7,#3F51B5,#2196F3,#03A9F4,#00BCD4,#009688,#4CAF50,#8BC34A,#CDDC39,#FFEB3B,#FFC107,#FF9800,#FF5722,#795548,#9E9E9E,#607D8B",
             "#ff7400,#fd8b17,#ffa242,#ffc367,#f9de8a,#cad6db,#b4bfc3,#a2a8b6,#7f96ab,#657790",
             "#0A181F,#143913,#214E63,#2B8274,#349D7C,#3CB45E,#53C653,#77D175,#9CDD98,#B3E6E4",
@@ -1369,13 +1460,13 @@ function showChart(string $type, string $title, array $data, array $labels, arra
             "#9dc6d8,#00b3ca,#7dd0b6,#1d4e89,#d2b29b,#e38690,#f69256,#ead98b,#965251,#c6cccc",
             "#BF360C,#E64A19,#FF5722,#FF8A65,#FFCCBC,#FFF3E0,#FFCC80,#FFA726,#F57C00,#E65100",
             "#263238,#455A64,#607D8B,#90A4AE,#CFD8DC,#212121,#616161,#9E9E9E,#E0E0E0,#F5F5F5"
-        );
-
+        ];
         if($colors_border == null){
-            if(sizeof($data) <= 10)
+            if(sizeof($data) <= 10){
                 $colors_border = explode(",", $colors_default[6]);
-            else
+            }else{
                 $colors_border = explode(",", $colors_default[0]);
+            }
         }else{
             for($i=0; $i<sizeof($colors_border); $i++){
                 if(preg_match("/^rgba/", $colors_border[$i])){
@@ -1384,28 +1475,51 @@ function showChart(string $type, string $title, array $data, array $labels, arra
             }
         }
         
-        if($type == "lineSharped")
+        if($type == "lineSharped"){
             $sharped = "elements: { line: { tension : 0 }},";
-        else
+        }else{
             $sharped = null;
+        }
+
+        // Ustawianie dodatkowych opcji
+        if(isset($options) > 0){
+            foreach ($options as $key => $value) {
+                if($value == "none")
+                    $arr_options[] = "legend: { display: false },";
+                elseif($value == "top" || $value == "bottom" || $value == "left" ||  $value == "right") {
+                    $arr_options[] = "legend: { display: true, position: '".$value."'},";
+                }
+
+                if($value == "percent"){
+                    $sum_data = array_sum($data);
+                    foreach ($data as $key => &$value2) {
+                        $value2 = round((($value2/$sum_data)*100), 0);
+                    }
+                    $arr_options[] = "tooltips: {
+                                        callbacks: {
+                                            label: function(tooltipItem, data) {
+                                                return data['datasets'][0]['data'][tooltipItem['index']] + '%';
+                                              }
+                                        }
+                                    },";
+                }
+            }
+        }
 
         switch($type){
             case "pie":
             case "doughnut":
-                $config = "backgroundColor: ['".@implode("','", $colors_border)."']
-                        }]},
-                        options: {
-                            title: {
-                                display: true,
-                                text: '$title'
-                            }}";
+                $pre_config = "backgroundColor: ['".@implode("','", $colors_border)."']";
+                $arr_options[] = "title:{
+                                    display: true,
+                                    text: '$title'
+                                }";
                 break;
 
             case "lineSharped":
             case "lineSoft":
                 $type = "line";
-                $config = "label: '".$title."',
-
+                $pre_config = "label: '".$title."',
                         <!-- The color of the line -->
                         borderColor: ['rgba(75, 192, 192, 1)'],
 
@@ -1417,59 +1531,65 @@ function showChart(string $type, string $title, array $data, array $labels, arra
 
                         <!-- The fill color for points -->
                         pointBackgroundColor: ['rgba(75, 192, 192, 0.2)'],
-                        borderWidth: 1
-                    }]},
-                options: {
-                    $sharped
-                    scales: {
-                        yAxes: [{
-                            ticks: {
-                                beginAtZero:true
-                            }
-                        }]}}";
+                        borderWidth: 1";
+                $arr_options[] = "$sharped
+                                    scales: {
+                                        yAxes: [{
+                                            ticks: {
+                                                beginAtZero:true
+                                            }
+                                        }]}";
                 break;
 
             case "bar":
             case "horizontalBar":
-                $config = "label: '".$title."',
+                $pre_config = "label: '".$title."',
                             backgroundColor: ['".@implode("','", $colors_background)."'],
                             borderColor: ['".@implode("','", $colors_border)."'],
-                            borderWidth: 1
-                            }]
-                            },
-                            options: {
-                                scales: {
+                            borderWidth: 1";
+                $arr_options[] = "scales: {
                                     yAxes: [{
                                         ticks: {
                                             beginAtZero:true
                                         }
-                                    }]}}";
+                                    }]}";
                 break;
+
             default:
                 exit(1);
                 break;
         }
 
         echo "<canvas id='$random_id' width='400' height='300'></canvas>
-        <script>
-            var myChart = new Chart(document.getElementById('$random_id'), {
-            type: '$type', data:{
-                labels: ['".implode("','", $labels)."'],
-                datasets: [{
-                    data: [".implode(",", $data)."], $config });
-        </script>";
+                <script>
+                    var myChart = new Chart(document.getElementById('$random_id'), {
+                        type: '$type',
+                        data:{
+                            labels: ['".implode("','", $labels)."'],
+                            datasets: [{
+                                data: [".implode(",", $data)."],
+                                $pre_config
+                            }],
+                        },
+                        options:{
+                            ".implode("", $arr_options)."
+                        }
+                    });
+                </script>";
     }else{
-        showError("<ul><li>".implode("</li><li>", $errors)."</li></ul>");
+        showError("Podczas wyświetlania wykresu wystąpiły następujące błędy:<ul><li>".implode("</li><li>", $errors)."</li></ul>");
     }
 }
 
 /**
  * Funkcja pokazujaca wykres z porownaniem zarobkow w poszczegolnych kategoriach uslug.
+ * W przypadku ujemnych wartosci zarobek dla danej kategorii ustawiany jest na 0.
  * 
  * @param int $year - rok, dla ktorego ma zostac wyswietlony wykres zarobkow.
- * @version 1.0.1
+ * @version 1.0.3
  */
 function showPaymentsPieChart(int $year = null){
+    $payments_change = false;
     if(!$year || !is_numeric($year))
         $year = date("Y");
     $zapytanie = "SELECT 'WEBSITES' AS 'TYPE', YEAR(`payments`.`payment_date`) AS ROK, ROUND(SUM(`payments`.`value`),2) AS ZAROBEK FROM `payments`
@@ -1484,17 +1604,35 @@ function showPaymentsPieChart(int $year = null){
         WHERE id_website IS NOT NULL AND id_computer_service IS NOT NULL AND YEAR(`payments`.`payment_date`) = ".$year."
         GROUP BY ROK";
 
-    $ilosc_kategorii = 3;
     $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
     if($query){
-        for($i=0; $i<$ilosc_kategorii; $i++){
-            $r = mysqli_fetch_array($query);
-            $wartosci[$i] = $r['ZAROBEK'];
+        $wartosci = array_fill(0, 3, null);
+        while($r = mysqli_fetch_array($query)){
+            switch ($r['TYPE']) {
+                case "WEBSITES":
+                    $wartosci[0] = $r['ZAROBEK'];
+                    break;
+                case "COMPUTER_SERVICE":
+                    $wartosci[1] = $r['ZAROBEK'];
+                    break;
+                default:
+                    $wartosci[2] = $r['ZAROBEK'];
+                    break;
+            }
+        }
+        foreach ($wartosci as $key => &$value) {
+            if($value < 0){
+                $value = 0;
+                $payments_change = true;
+            }
+        }
+        if($payments_change){
+            showInfo("Przynajmniej jedna kategoria przychodów jest ujemna!<br>Wykres nie przedstawia proporcjonalnych zarobków.");
         }
         $title = "Zarobki dla danych kategorii w roku ".$year;
         $labels = array("Strony Internetowe", "Serwis Komputerowy", "Inne");
         $colors = array("#FFCD56", "#36A2EB", "#C0C0C0");
-        showChart("pie", $title, $wartosci, $labels, $colors);
+        showChart("pie", $title, $wartosci, $labels, $colors, "right");
     }else{
         showError("Nie udało się załadować danych do wyświetlenia wykresu!");
     }
@@ -1506,33 +1644,29 @@ function showPaymentsPieChart(int $year = null){
  * miesiaca zamiast zielonego zostanie oznaczony na czerwono.
  *
  * @param int $year - rok, dla ktorego ma zostac wyswietlony wykres zarobkow.
- * @version 1.0.1
+ * @version 1.0.2
  */
 function showMonthlyPaymentsChart(int $year = null){
     if(!$year || !is_numeric($year))
         $year = date("Y");
 
-    $zapytanie = "SELECT MONTH(`payments`.`payment_date`)-1 AS 'MIESIAC', ROUND(SUM(`payments`.`value`),2) AS 'KWOTA' FROM `payments` WHERE YEAR(`payment_date`) = ".$year." GROUP BY MIESIAC ORDER BY MIESIAC";
+    $zapytanie = "SELECT MONTH(`payments`.`payment_date`) AS 'MIESIAC', ROUND(SUM(`payments`.`value`),2) AS 'KWOTA' FROM `payments` WHERE YEAR(`payment_date`) = ".$year." GROUP BY MIESIAC ORDER BY MIESIAC";
     $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
     $months = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"];
-    $colors = [];
 
     if($query){
+        $data = array_fill(0, 12, 0);
+        while($r = mysqli_fetch_array($query)){
+            $data[$r['MIESIAC']-1] = $r['KWOTA'];
+        }
         for($i=0; $i<12; $i++){
-            $r = mysqli_fetch_array($query);
-            if($r['MIESIAC'] !== null){
-                $data[$i] = $r['KWOTA'];
-            }else{
-                $data[$i] = 0;
-            }
-
-            if($r['KWOTA'] >= 0){
+            if($data[$i] >= 0){
                 $colors[$i] = "rgba(60, 118, 61, 1)";
             }else{
                 $colors[$i] = "rgba(255, 50, 50, 1)";
             }
         }
-        showChart("bar", "Łączne miesięczne zarobki", $data, $months, $colors);
+        showChart("bar", "Miesięczne finanse w roku ".$year, $data, $months, $colors);
     }else{
         showError("Nie udało się załadować danych wymaganych do wyświetlenia wykresu.");
     }
@@ -1541,7 +1675,7 @@ function showMonthlyPaymentsChart(int $year = null){
 /**
  * Funkcja wyswietlajaca wykres liniowy z zarobkami w kolejnych latach.
  *
- * @version 1.0.1
+ * @version 1.0.2
  */
 function showYearlyPaymentsChart(){
     $zapytanie = "SELECT YEAR(`payments`.`payment_date`) AS 'ROK', ROUND(SUM(`payments`.`value`),2) AS ZAROBEK FROM `payments` LEFT JOIN `computer_service` ON `payments`.`id_computer_service` = `computer_service`.`id` GROUP BY ROK ORDER BY ROK DESC";
@@ -1559,7 +1693,7 @@ function showYearlyPaymentsChart(){
                 $data[$i] = 0;
         }
         $data = array_reverse($data);
-        showChart("lineSoft", "Porównanie rocznych przychodów", $data, $years);
+        showChart("lineSoft", "Porównanie rocznych finansów", $data, $years);
     }else{
         showError("Nie udało się załadować danych wymaganych do wyświetlenia wykresu.");
     }
@@ -1633,10 +1767,10 @@ function showServersDopdown(string $selected_id = null){
 /**
  * Funkcja wyswietlajaca tabele z wszystkimi klientami w systemie.
  * 
- * @version 1.0.0
+ * @version 1.0.1
  */
 function showClientsList(){
-    $zapytanie = "SELECT `id_unique`, `first_name`, `second_name` FROM `clients` ORDER BY `second_name`, `first_name` ";
+    $zapytanie = "SELECT `clients`.`id_unique`, `clients`.`first_name`, `clients`.`second_name`, `clients`.`phone`, `clients`.`email`, `clients`.`address`, COUNT(`computer_service`.`id`) AS 'ILOSC_ZGLOSZEN' FROM `clients` LEFT JOIN `computer_service` ON `clients`.`id` = `computer_service`.`id_client` GROUP BY `clients`.`id` ORDER BY `clients`.`second_name`, `clients`.`first_name` ";
     $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
     if($query){
         if(mysqli_num_rows($query)>0){
@@ -1644,13 +1778,22 @@ function showClientsList(){
             <tr>
                 <th><i class='fa fa-fw fa-user'></i> Imię</th>
                 <th><i class='fa fa-fw fa-user'></i><i class='fa fa-fw fa-sort-alpha-asc'></i> Nazwisko</th>
+                <th style='width: 80px;'></th>
                 <th></th>
             </tr>";
             for($i=0; $i<mysqli_num_rows($query); $i++) {
                 $r = mysqli_fetch_array($query);
+                $icons = "";
+                if($r['phone'])     $icons .= "<i class='fa fa-phone'></i> ";
+                if($r['email'])     $icons .= "<i class='fa fa-at'></i> ";
+                if($r['address'])   $icons .= "<i class='fa fa-home'></i> ";
+                if($r['ILOSC_ZGLOSZEN'] >= 9) $icons .= "<img src='img/svg/number_nine_plus.svg' style='height: 16px; margin-bottom: 3px;'>";
+                elseif($r['ILOSC_ZGLOSZEN'] >= 5) $icons .= "<img src='img/svg/number_five.svg' style='height: 16px; margin-bottom: 3px;'>";
+                elseif($r['ILOSC_ZGLOSZEN'] >= 3) $icons .= "<img src='img/svg/number_three.svg' style='height: 16px; margin-bottom: 3px;'>";
                 echo "<tr>
                     <td>".$r['first_name']."</td>
                     <td>".$r['second_name']."</td>
+                    <td>".$icons."</td>
                     <td><a href='clientsMore.php?id_u=".$r['id_unique']."' class='btn btn-default btn-xs full-width'><i class='fa fa-arrow-right'></i></a></td>
                 </tr>";
             }
@@ -1684,6 +1827,28 @@ function showClientsDopdown(string $selected_id_u = null){
             }
         }
         echo "</optgroup>";
+    }
+}
+
+/**
+ * Funkcja wyswietlajaca liste zlecen serwisu komputerowego dla danego klienta
+ *
+ * @param string $id - identyfikator klienta
+ * @param int $count - ilosc ostatnich zgloszen, jaka ma zostac wyswietlona
+ * @version 1.0.1
+ */
+function showClientServiceRequests(int $id, int $count){
+    $zapytanie = "SELECT `id_unique`, `date_start`, `date_end`, `device`, `status` FROM `computer_service` WHERE `id_client` = ".$id." ORDER BY `status` ASC, `date_start` DESC LIMIT ".$count;
+    $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+    if($query){
+        while($r = mysqli_fetch_array($query)){
+            if($r['status'] == 0){
+                $class = "list-group-item-warning";
+            }else{
+                $class = null;
+            }
+            echo "<a href='computerServiceMore.php?id_u=".$r['id_unique']."' class='list-group-item ".$class."'>".$r['date_start']." | ".$r['device']."</a>";
+        }
     }
 }
 
@@ -1958,10 +2123,10 @@ function showWebsitesCalendar(int $rok, int $miesiac){
 /**
  * Funkcja wyswietlajaca 20 najbardziej zblizajacych sie platnosci od klientow, ktorym utrzymuje strone.
  *
- * @version 1.0.0
+ * @version 1.0.1
  */
 function showWebsitesUpcomingPayments(){
-    $zapytanie = "SELECT `name`, `payment_for_me`, `payment_for_me_date`, datediff(`payment_for_me_date`,CURDATE()) AS 'roznica', `status` FROM `websites` WHERE `payment_for_me` != 0 AND `status` = 2 ORDER BY `roznica` LIMIT 20 ";
+    $zapytanie = "SELECT `name`, `payment_for_me`, `payment_for_me_date`, datediff(`payment_for_me_date`, CURDATE()) AS 'roznica', `status`, datediff(`domain_expire_date`, CURDATE()) AS 'roznica_domain', `domain_expire_date` FROM `websites` WHERE `payment_for_me` != 0 AND `status` = 2 ORDER BY `roznica` LIMIT 20 ";
     $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
     if($query){
         if(mysqli_num_rows($query) != 0){
@@ -1969,13 +2134,18 @@ function showWebsitesUpcomingPayments(){
                 $r = mysqli_fetch_array($query);
                 switch($r['roznica']){
                     case ($r['roznica']<0):
-                        showError($r['payment_for_me_date']." | ".$r['name']."<p class='pull-right'>".getMoneyValue($r['payment_for_me'])." zł</p><br>".abs($r['roznica'])." dni temu <b>minął termin płatności za roczne utrzymanie</b>!<br>Domena tej strony mogła stracić ważność!<br>Jeśli strona została porzucona, zmień jej status na odpowiedni.");
+                        showError($r['payment_for_me_date']." | ".$r['name']."<p class='pull-right'>".getMoneyValue($r['payment_for_me'])." zł</p><br>".abs($r['roznica'])." dni temu <b>minął termin płatności za roczne utrzymanie</b>!<br>Data wygaśnięcia domeny dla tej strony: ".$r['domain_expire_date'].".<br>Jeśli strona została porzucona, <b>zmień jej status na odpowiedni</b> oraz załącz <b>Formularz Zakończenia Współpracy</b>.");
                         break;
                     case ($r['roznica']<=7):
-                        showError($r['payment_for_me_date']." | ".$r['name']."<p class='pull-right'>".getMoneyValue($r['payment_for_me'])." zł</p><br>Pozostało ".$r['roznica']." dni! Jeśli nie zostanie dokonana płatność, domena tej strony może zostać anulowana!");
+                        if($r['roznica_domain'] != null){
+                            $roznica_domain = $r['roznica_domain'];
+                        }else{
+                            $roznica_domain = "nieznaną ilość";
+                        }
+                        showError($r['payment_for_me_date']." | ".$r['name']."<p class='pull-right'>".getMoneyValue($r['payment_for_me'])." zł</p><br>Pozostało ".$r['roznica']." dni do terminu płatności za roczne utrzymanie strony!<br>(domena wygasa za ".$roznica_domain." dni)");
                         break;
                     case ($r['roznica']<=31):
-                        showWarning($r['payment_for_me_date']." | ".$r['name']."<p class='pull-right'>".getMoneyValue($r['payment_for_me'])." zł</p><br>Pozostało ".$r['roznica']." dni!");
+                        showWarning($r['payment_for_me_date']." | ".$r['name']."<p class='pull-right'>".getMoneyValue($r['payment_for_me'])." zł</p><br>Pozostało ".$r['roznica']." dni do terminu płatności za roczne utrzymanie strony!");
                         break;
                     case ($r['roznica']>31):
                         showInfo($r['payment_for_me_date']." | ".$r['name']."<p class='pull-right'>".getMoneyValue($r['payment_for_me'])." zł</p>");
@@ -2281,15 +2451,13 @@ function validate(string $text = null, int $mode = null){
     }
 }
 
-
-
 /**
  * Funkcja sprawdzajaca, czy aktualnie zalogowany uzytkownik ma odpowiednie uprawnienia.
  * Jeśli aktualnie nie ma zalogowanego zadnego uzytkownika, funkcja wyswietli komunikat
  * o wygaslej sesji wraz z linkiem do logowania.
  * 
  * @param int $level - minimalny poziom uprawnien, aby zwrocic true
- * @version 1.0.2
+ * @version 1.0.3
  */
 function checkUserPermissions(int $level){
     $zapytanie = "SELECT `permission_level` FROM `users` WHERE `id_unique` LIKE '".@$_SESSION['JezusServerHome']."'";
@@ -2304,6 +2472,7 @@ function checkUserPermissions(int $level){
             }
         }else{
             showError("Wygląda na to, że sesja logowania wygasła! Zaloguj się ponownie <a href='".WEB_ADDRESS."/login.php'>tutaj</a>");
+            header("Location: ".WEB_ADDRESS."/login.php");
             exit(0);
         }
     }else{
@@ -2548,37 +2717,5 @@ function showWarning(string $message){
  */
 function showError(string $message){
     echo "<div class='alert alert-danger'> <i class='fa fa-fw fa-exclamation-triangle'></i> <strong>UWAGA!</strong><br>".$message."</div>";
-}
-
-/* #################################
- * #
- * ### Funkcje w trakcie rozwijania
- * #
- * #################################
- */
-
-/**
- * Funkcja laczaca sie z zewnetrznym API na serwerze
- * i pobierajaca wyniki ankiety jakosci pracy informatyka.
- * 
- * @param string $mode - okresla jakie dane ma zwrocic API (websites, computer_service, other). W przypadku null API zwroci wyniki dla wszystkich kategorii.
- */
-function getPollResults(string $mode){
-    $api_link = "http://localhost/dashboard/ACTUAL%20WORK/PastaMedia%20Survey%20API/api.php";
-    $key = "gwWoh1IAuU82BQVq22hAq3hGbW8F1Ozm-kvw1F32Q2610rSiq7mRwI2jCBsh4isBw";
-    $available_modes = [
-        "a",
-        "b"
-    ];
-    if(in_array($mode, $available_modes)){
-        $data = file_get_contents($api_link."?key=".$key."&mode=".$mode);
-        if($data){
-            //return json_decode($data);
-        }else{
-            showError("Nie udało się odebrać danych z zewnętrzengo API systemu ankietowego.");
-        }
-    }else{
-        showError("Nieprawidłowy tryb! Dostępne tryby to: '".implode("', '", $available_modes)."'.");
-    }
 }
 ?>

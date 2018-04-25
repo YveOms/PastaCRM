@@ -39,7 +39,7 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                     <div class="col-md-8">
                         <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h3 class="panel-title"><i class="fa fa-users"></i> Lista klientów</h3>
+                            <i class="fa fa-users"></i> Lista klientów
                         </div>
                             <div class="panel-body">
                                 <div class="form-group">
@@ -63,7 +63,7 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                     <div class="col-md-4">
                         <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h3 class="panel-title"><i class="fa fa-life-ring"></i> Pomoc</h3>
+                            <i class="fa fa-life-ring"></i> Pomoc
                         </div>
                             <div class="panel-body">
                                 <p>

@@ -96,8 +96,8 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                             </a>
                         </div>
                         <div class="col-lg-3">
-                            <a href="http://patternizer.com/" target="_blank">
-                                <img src="img/useful_tools/logo_Patternizer.png" alt="Patternizer" class="img-thumbnail">
+                            <a href="https://materialdesignicons.com/" target="_blank">
+                                <img src="img/useful_tools/logo_MaterialDesignIcons.png" alt="Material Design Icons" class="img-thumbnail">
                             </a>
                         </div>
                         <div class="col-lg-3">
@@ -106,7 +106,9 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                             </a>
                         </div>
                         <div class="col-lg-3">
-                            
+                            <a href="http://patternizer.com/" target="_blank">
+                                <img src="img/useful_tools/logo_Patternizer.png" alt="Patternizer" class="img-thumbnail">
+                            </a>
                         </div>
                         <div class="col-lg-3">
                             <a href="https://mdbootstrap.com/" target="_blank">
