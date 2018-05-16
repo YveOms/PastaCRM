@@ -135,7 +135,6 @@ function deletePayment(mode, id_delete, id_work){
                     switch(response){
                         case "OK":
                             showSuccess("add_payment_alert", "Płatność usunięta!");
-                            console.log(mode); // DEBUG
                             showConnectedPayments("payments_list", mode, id_work, true);
                             break;
                         case "ERR_QUERY":
@@ -173,7 +172,6 @@ function movePricingListItem(element, direction, id){
         $.ajax({
             url: "inc/ajax.php?f=movePricingListItem&id="+id+"&direction="+direction,
             success:function(response){
-                console.log("Success: " + response);//DEBUG
                 switch (response) {
                     case "OK":
                         var row = $(element).parents("tr:first");
@@ -197,7 +195,7 @@ function movePricingListItem(element, direction, id){
                 }
             },
             error:function(response){
-                console.error("Error: " + response);//DEBUG
+                
             }
         });
     }
@@ -244,10 +242,96 @@ function searchInsideTable(id_input, id_table, td_number){
 }
 
 /**
+ * Funkcja zaznaczajaca w menu aktualnie otwarta strone.
+ * Funkcja sprawdza, jaki plik jest aktualne otwarty (pobiera go z paska adresu przegladarki),
+ * a nastepnie wyszukuje w #menu_left.
+ * @version 1.0.0
+ */
+function setMenuActive() {
+    var file = window.location.pathname.split('/').pop().split('.').shift();
+    $("#menu_left").children().each(function(){
+        var name = this.innerText.trim().toLowerCase();
+        switch (name) {
+            case "dashboard":
+                if(file == "dashboard")
+                    $(this).addClass("active");
+                    return true;
+                break;
+
+            case "strony internetowe":
+                if(file.substr(0, 8) == "websites" && file != "websitesCalendar")
+                    $(this).addClass("active");
+                    return true;
+                break;
+
+            case "kalendarz płatności":
+                if(file == "websitesCalendar")
+                    $(this).addClass("active");
+                    return true;
+                break;
+
+            case "serwery":
+                if(file.substr(0, 7) == "servers")
+                    $(this).addClass("active");
+                    return true;
+                break;
+            
+            case "serwis komputerowy":
+                if(file.substr(0, 15) == "computerService")
+                    $(this).addClass("active");
+                    return true;
+                break;
+            
+            case "klienci":
+                if(file.substr(0, 7) == "clients")
+                    $(this).addClass("active");
+                    return true;
+                break;
+
+            case "cennik":
+                if(file == "pricingList")
+                    $(this).addClass("active");
+                    return true;
+                break;
+
+            case "statystyki ankiety":
+                if(file == "poll")
+                    $(this).addClass("active");
+                    return true;
+                break;
+
+            case "transakcje i finanse":
+                if(file == "transactionsMore")
+                    $(this).addClass("active");
+                    return true;
+                break;
+
+            case "przydatne narzędzia":
+                if(file == "usefulTools")
+                    $(this).addClass("active");
+                    return true;
+                break;
+
+            case "szablony":
+                if(file.substr(0, 9) == "templates")
+                    $(this).addClass("active");
+                    return true;
+                break;
+
+            case "pomoc":
+                if(file == "help")
+                    $(this).addClass("active");
+                    return true;
+                break;
+        }
+    });
+}
+
+/**
  * Funkcja wyswietlajaca formularz dodawania nowego klienta do bazy.
  * @param {string} display_id - identyfikator div lub innego elelemtu, do ktorego ma zostac zwrocony
  * formularz dodawania nowego klienta.
- * @version 1.0.0
+ * @version 1.0.1
  */
 function showAddNewClientForm(display_id){
     $("#"+display_id).html(
@@ -257,14 +341,14 @@ function showAddNewClientForm(display_id){
         + '<label>Imię <font color="red">*</font></label>'
         + '<div class="input-group mb-2 mr-sm-2 mb-sm-0">'
         + '<div class="input-group-addon"><i class="fa fa-fw fa-user"></i></div>'
-        + '<input type="text" class="form-control" name="client_first_name" autocomplete="on" required>'
+        + '<input type="text" class="form-control" name="client_first_name" autocomplete="on" minlength="3" maxlength="100" onkeyup="checkInputLength(this, 3, 100)" required>'
         + '</div></div>'
 
         +' <div class="form-group">'
         + '<label>Nazwisko <font color="red">*</font></label>'
         + '<div class="input-group mb-2 mr-sm-2 mb-sm-0">'
         + '<div class="input-group-addon"><i class="fa fa-fw fa-user"></i></div>'
-        + '<input type="text" class="form-control" name="client_second_name" autocomplete="on" required>'
+        + '<input type="text" class="form-control" name="client_second_name" autocomplete="on" minlength="3" maxlength="100" onkeyup="checkInputLength(this, 3, 100)" required>'
         + '</div></div>'
 
         + '<div class="row">'
@@ -272,7 +356,7 @@ function showAddNewClientForm(display_id){
         + '<label>Telefon kontaktowy</label>'
         + '<div class="input-group mb-2 mr-sm-2 mb-sm-0">'
         + '<div class="input-group-addon"><i class="fa fa-fw fa-phone"></i></div>'
-        + '<input type="tel" class="form-control" name="client_phone" autocomplete="off" minlength=9 maxlength=9>'
+        + '<input type="tel" class="form-control" name="client_phone" autocomplete="off" minlength="9" maxlength="9" onkeyup="checkInputLength(this, 9, 9)">'
         + '</div></div>'
 
         + '<div class="col-md-1 text-center"><b>LUB<br><i class="fa fa-fw fa-step-backward"></i><i class="fa fa-fw fa-step-forward"></i></b></div>'
@@ -284,6 +368,27 @@ function showAddNewClientForm(display_id){
         + '<input type="email" class="form-control" name="client_mail" autocomplete="off">'
         + '</div></div>'
         + '</div>'
+
+        +'</div></div>'
+    );
+}
+
+/**
+ * Funkcja wyswietlajaca formularz dodawania nowego dostawcy (serwera, certyfikatu SSL, itd...) do bazy.
+ * @param {string} display_id - identyfikator div lub innego elelemtu, do ktorego ma zostac zwrocony
+ * formularz dodawania nowego klienta.
+ * @version 1.0.1
+ */
+function showAddNewProviderForm(display_id){
+    $("#"+display_id).html(
+        '<div class="panel panel-default"><div class="panel-body">'
+
+        + '<div class="form-group">'
+        + '<label>Nazwa dostawcy <font color="red">*</font></label>'
+        + '<div class="input-group mb-2 mr-sm-2 mb-sm-0">'
+        + '<div class="input-group-addon"><i class="fa fa-fw fa-address-card"></i></div>'
+        + '<input type="text" class="form-control" name="new_provider_name" autocomplete="on" minlength="3" maxlength="100" onkeyup="checkInputLength(this, 3, 100)" required>'
+        + '</div></div>'
 
         +'</div></div>'
     );
@@ -343,10 +448,10 @@ function currentMonth() {
 /**
  * Funkcja wstawiajaca template do pola 'input' opisu serwisu komputerowego.
  * @param {string} id
- * @version 1.0.0
+ * @version 1.0.1
  */
 function setComputerServiceTemplate(id) {
-    $("#"+id).val("[b]Ustalenia wstępne:[/b]\n\n[b]Diagnoza:[/b]\n\n[b]Przebieg pracy:[/b]\n\n[b]Podsumowanie:[/b]");
+    $("#"+id).val("[b]Zgłaszany problem:[/b]\n\n[b]Diagnoza:[/b]\n\n[b]Przebieg pracy:[/b]\n\n[b]Podsumowanie:[/b]");
 }
 
 /**
@@ -409,35 +514,61 @@ function showError(display_id, text){
     $("#"+display_id).html("<div class='alert alert-danger alert-dismissable'><a href='#' class='close' data-dismiss='alert' aria-label='close'>&times;</a><i class='fa fa-fw fa-exclamation-triangle'></i> <strong>UWAGA!</strong><br>"+text+"</div>");
 }
 
+/**
+ * Funkcja podswietlajaca na czerwono lub zielono input o odpowiednim id,
+ * w zaleznosci od tego czy wartosc w polu ma wymagana dlugosc (ilosc znakow).
+ * Dodatkowo dodaje stosowna informacje z prawej strony pola input.
+ * @param {object} input
+ * @param {int} min_length 
+ * @param {int} max_length
+ * @param {bool} light - tryb lekki (nie wyswietla dodatkowego komentarza do input)
+ * @version 1.0.0
+ */
+function checkInputLength(input, min_length, max_length, light = null){
+    var input_length = input.value.length;
+    var last_child = $(input).parent().children().last();
+    var last_child_classes = last_child.attr("class").split(' ');
+
+    if($.inArray("input-group-addon", last_child_classes) == -1 && light == null)
+        $(input).parent().append("<div class='input-group-addon'></div>");
+
+    var last_child = $(input).parent().children().last();
+
+    if(input_length < min_length){
+        $(input).removeClass("input-success");
+        $(input).addClass("input-danger");
+        if(light == null){
+            last_child.removeClass("input-group-addon-success");
+            last_child.addClass("input-group-addon-danger");
+            last_child.html("Minimum " + min_length + " znaków!");
+        }
+    }else if(input_length > max_length){
+        $(input).removeClass("input-success");
+        $(input).addClass("input-danger");
+        if(light == null){
+            last_child.removeClass("input-group-addon-success");
+            last_child.addClass("input-group-addon-danger");
+            last_child.html("Maksimum " + max_length + " znaków!");
+        }
+    }else{
+        $(input).removeClass("input-danger");
+        $(input).addClass("input-success");
+        if(light == null){
+            last_child.removeClass("input-group-addon-danger");
+            last_child.addClass("input-group-addon-success");
+            last_child.html("<i class='fa fa-check'></i> OK");
+        }
+    }
+    
+}
+
 /* ##############################
  * # Funkcje w trakcie produkcji
  * ##############################
 */
 
-/**
- * Funkcja zaznaczajaca w menu aktualnie otwarta strone.
- * Funkcja sprawdza, jaki plik jest aktualne otwarty (pobiera go z paska adresu przegladarki),
- * a nastepnie wyszukuje w obiekcie 'menu_select' jaka pozycje w menu ma zaznaczyc.
- */
-function setMenuActive() {
-    var file = window.location.pathname.split('/').pop();
-    file = file.substr(0, file.length-4);
-
-    var menu_select = {
-        "dashboard":"Dashboard",
-        "websites":"Strony Internetowe",
-        "websitesMore":"Strony Internetowe",
-        "websitesEdit":"Strony Internetowe"
-    };
-
-    //alert(menu_select.file.val());
-    /*var name = $("#menu_left").childNode.nodeValue;
-    alert(name);*/
-}
-
-
-
-/*function deletePricingList(id){
+/*
+function deletePricingList(id){
     if(confirm('Jesteś pewien, że chcesz USUNĄĆ tą usługę z cennika?')){
         if(!isNaN(id)){
             $.ajax({
@@ -455,7 +586,8 @@ function setMenuActive() {
             showError("display_alert", "Wygląda na to, że identyfikator usługi jest nieprawidłowy! Usługa nie została usunięta!");
         }
     }
-}*/
+}
+*/
 
 /**
  * Funkcja sprawdza, czy string 'response' jest komunikatem typu alert, alert-warning, itd...

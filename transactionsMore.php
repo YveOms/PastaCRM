@@ -43,7 +43,7 @@ if(checkUserPermissions(3)){
                             <div class="panel-body">
                                 <div class="table-responsive">
                                     <?php
-                                        showTransactions(500, false);
+                                        showTransactions(500);
                                     ?>
                                 </div>
                             </div>
@@ -79,7 +79,7 @@ if(checkUserPermissions(3)){
                     
                         <div class="panel panel-default">
                             <div class="panel-heading">
-                                <h3 class="panel-title"><i class="fa fa-money fa-fw"></i> <i class="fa fa-line-chart fa-fw"></i> Coroczne zestawienie przychodów</h3>
+                                <h3 class="panel-title"><i class="fa fa-money fa-fw"></i> <i class="fa fa-line-chart fa-fw"></i> Coroczne zestawienie finansów</h3>
                             </div>
                             <div class="panel-body">
                                 <div class="table-responsive">

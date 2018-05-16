@@ -21,7 +21,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                     <div class="col-lg-12">
                         <h1 class="page-header">
                             <?= $siteTitle ?>
-                            <small>Just made Internet better place !</small>
+                            <small>Just made Internet better place!</small>
                         </h1>
                         <ol class="breadcrumb">
                             <li>
@@ -48,7 +48,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                     $site_data = [
                                         "website_name" => $_POST['website_name'],
                                         "website_address" => $_POST['website_address'],
-                                        "server_provider" => $_POST['server_provider'],
+                                        "server" => $_POST['server'],
                                         "cms" => $_POST['cms'],
                                         "status" => $_POST['status'],
                                         "contact_person" => @$_POST['contact_person']
@@ -87,7 +87,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                         <label>Nazwa strony <font color="red">*</font></label>
                                         <div class="input-group mb-2 mr-sm-2 mb-sm-0">
                                             <div class="input-group-addon"><i class="fa fa-fw fa-underline"></i></div>
-                                            <input type="text" class="form-control" name="website_name" maxlength="100" required />
+                                            <input type="text" class="form-control" name="website_name" minlength="2" maxlength="100" onkeyup="checkInputLength(this, 2, 100)" required />
                                         </div>
                                     </div>
 
@@ -95,15 +95,15 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                     <label>Adres internetowy <font color="red">*</font></label>
                                         <div class="input-group mb-2 mr-sm-2 mb-sm-0">
                                             <div class="input-group-addon"><i class="fa fa-fw fa-link"></i> http://</div>
-                                            <input type="text" class="form-control" name="website_address" maxlength="100" required />
+                                            <input type="text" class="form-control" name="website_address" minlength="4" maxlength="100" onkeyup="checkInputLength(this, 4, 100)" required />
                                         </div>
                                     </div>
 
                                     <div class="form-group">
-                                        <label>Dostawca serwera <font color="red">*</font></label>
+                                        <label>Serwer</label>
                                         <div class="input-group mb-2 mr-sm-2 mb-sm-0">
                                             <div class="input-group-addon"><i class="fa fa-fw fa-server"></i></div>
-                                            <select class="selectpicker form-control" name="server_provider" data-live-search="true">
+                                            <select class="selectpicker form-control" name="server" data-live-search="true">
                                                 <option value="">- - -</option>
                                                 <?php
                                                     showServersDopdown();
@@ -144,7 +144,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                             <select class="selectpicker form-control" name="contact_person" data-live-search="true">
                                                 <option value="">- - -</option>
                                                 <?php
-                                                    showClientsDopdown();
+                                                    showClientsDropdown();
                                                 ?>
                                             </select>
                                             <span class="input-group-btn">
@@ -175,7 +175,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                     <br>Adres strony bez przedrostka <i>http://</i>, np. "pastamedia.com".
                                 </p>
                                 <p>
-                                    <b>Dostawca serwera</b>
+                                    <b>Serwer</b>
                                     <br>Wybierz serwer, na którym znajdują się pliki strony. Jeśli serwera nie ma na liście, możesz go dodać w menu <span class="label label-default"><i class="fa fa-fw fa-server"></i> Serwery</span> dostępnym w panelu zarządzania PastaMedia CMS.
                                 </p>
                                 <p>

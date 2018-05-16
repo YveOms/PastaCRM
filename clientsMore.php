@@ -61,11 +61,23 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                         </tr>
                         <tr>
                             <th><i class='fa fa-fw fa-phone'></i> Telefon kontaktowy</th>
-                            <td><a href="tel:<?= $client_data['phone'] ?>"><?= $client_data['phone'] ?></a></td>
+                            <td>
+                                <?php
+                                    if($client_data['phone'] != null) {
+                                        echo $client_data['phone']."<a href='tel:".$client_data['phone']."' class='btn btn-success btn-xs pull-right'><i class='fa fa-phone'></i> Zadzwoń</a>";
+                                    }
+                                ?>
+                            </td>
                         </tr>
                         <tr>
                             <th><i class='fa fa-fw fa-at'></i> Adres email</th>
-                            <td><a href="mailto:<?= $client_data['email'] ?>"><?= $client_data['email'] ?></a></td>
+                            <td>
+                                <?php
+                                    if($client_data['email'] != null) {
+                                        echo $client_data['email']."<a href='mailto:".$client_data['email']."' class='btn btn-success btn-xs pull-right'><i class='fa fa-envelope'></i> Napisz</a>";
+                                    }
+                                ?>
+                            </td>
                         </tr>
                         <tr>
                             <th><i class='fa fa-fw fa-home'></i> Adres zamieszkania</th>
@@ -100,10 +112,23 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                             <td class="text-right"><?= $client_data['ILOSC_ZGLOSZEN'] ?></td>
                         </tr>
                         <tr>
-                            <th style='width: 70%'>Najdłuższy okres serwisowania sprzętu</th>
+                            <th>Najdłuższy okres serwisowania sprzętu</th>
                             <td class="text-right"><?= $client_data['MAX_CZAS_SERWISOWANIA'] ?> dni</td>
                         </tr>
                     </table>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><i class="fa fa-laptop"></i> Ostatnie 10 zgłoszeń serwisowych</h3>
+                </div>
+                <div class="panel-body">
+                    <ul class="list-group">
+                        <?php
+                            showClientServiceRequests($client_data['id'], 10);
+                        ?>
+                    </ul>
                 </div>
             </div>
 

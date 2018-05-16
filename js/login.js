@@ -79,7 +79,6 @@ function login(){
                             default:
                                 show_error("Podczas logowania wystąpił błąd!<br>Kod: 0x69");
                                 $("#title").html("PastaMedia");
-                                console.log(response);
                                 break;
                         }
                     },

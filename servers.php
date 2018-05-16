@@ -52,12 +52,14 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                             <div class="panel-heading"><i class="fa fa-life-ring"></i> Pomoc</div>
                             <div class="panel-body">
                                 <div class="alert alert-info">
-                                    Podgląd stron utrzymywanych na danym serwerze pokazuje strony zakończone (wciąż administrowane) oraz strony w trakcie tworzenia (oznaczone kolorem zółtym).
+                                    Podgląd stron utrzymywanych na danym serwerze <b>pokazuje tylko aktualnie administrowane strony</b>.
+                                    <br>Strony w trakcie produkcji, ukończone (nie administrowane) oraz porzucone nie są wyświetlane.
                                 </div>
                                 <hr>
                                 <p>
                                     <b>Co zawiera lista?</b>
                                     <br>Lista zawiera serwery i hostingi, wraz z osadzonymi na nich stronami.
+                                    <br>Pozycje posortowane są po dacie wygaśnięcia, od najbliższej do najpóźniejszej.
                                 </p>
                             </div>
                         </div>

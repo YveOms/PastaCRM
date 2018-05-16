@@ -39,7 +39,7 @@ if(checkUserPermissions(1) || checkUserPermissions(3)){
                     <div class="col-md-8">
                         <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h3 class="panel-title"><i class="fa fa-laptop"></i> Lista zgłoszeń</h3>
+                            <i class="fa fa-laptop"></i> Lista zgłoszeń
                         </div>
                             <div class="panel-body">
                                 <div class="table-responsive">
@@ -56,7 +56,7 @@ if(checkUserPermissions(1) || checkUserPermissions(3)){
                     <div class="col-md-4">
                         <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h3 class="panel-title"><i class="fa fa-life-ring"></i> Pomoc</h3>
+                            <i class="fa fa-life-ring"></i> Pomoc
                         </div>
                             <div class="panel-body">
                                 <img src="img/computer_service.png" class="img img-responsive" alt="Computer Service" width="100%" height="auto" />

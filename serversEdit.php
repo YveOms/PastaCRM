@@ -44,18 +44,31 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
             <div class="panel-heading"><i class="fa fa-server"></i> Dane serwera</div>
             <div class="panel-body">
             <?php
-                if(@$_GET['status'] == "delete")
-                    deleteServer($id_u);
+                if(@$_GET['status'] == "delete"){
+                    if(deleteServer($id_u)){
+                        @header("Location: servers.php");
+                        exit(0);
+                    }
+                }
                 
-
                 if(isset($_POST['edit_server'])){
                     $server_data = [
                         "id_u" => $id_u,
-                        "server_provider" => $_POST['server_provider'],
+                        "id_server_provider" => null,
+                        "server_name" => $_POST['server_name'],
                         "server_type" => $_POST['server_type'],
                         "expires_date" => $_POST['expires_date'],
                         "comment" => $_POST['comment']
                     ];
+
+                    if(isset($_POST['new_provider_name'])){
+                        if(addProvider($_POST['new_provider_name'])){
+                            $server_data['id_server_provider'] = getLastProviderId();
+                        }
+                    }else{
+                        $server_data['id_server_provider'] = $_POST['id_server_provider'];
+                    }
+                    
                     editServer($server_data);
                 }
 
@@ -71,9 +84,24 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                         }
             ?>
                 <form method="post">
+                    <div class="form-group" id="provider_input">
+                        <label>Dostawca serwera <font color="red">*</font></label>
+                        <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                            <div class="input-group-addon"><i class="fa fa-fw fa-address-card"></i></div>
+                            <select class="selectpicker form-control" name="id_server_provider" data-live-search="true">
+                                <option value="">- - -</option>
+                                <?php
+                                    showProvidersDopdown($server_data['id_server_provider']);
+                                ?>
+                            </select>
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button" onclick="showAddNewProviderForm('provider_input')"><i class="fa fa-fw fa-plus"></i> Dodaj nowego dostawcę</button>
+                            </span>
+                        </div>
+                    </div>
                     <div class="form-group">
-                        <label>Dostawca serwera: <font color="red">*</font></label>
-                        <input type="text" class="form-control" name="server_provider" maxlength="100" value="<?= $server_data['server_provider'] ?>" required />
+                        <label>Nazwa serwera: <font color="red">*</font></label>
+                        <input type="text" class="form-control" name="server_name" value="<?= $server_data['name']; ?>" minlength="4" maxlength="100" onkeyup="checkInputLength(this, 4, 100, true)" required />
                     </div>
                     <div class="form-group">
                         <label>Typ usługi: <font color="red">*</font></label>
@@ -116,6 +144,10 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                     <p>
                         <b>Dostawca serwera</b>
                         <br>Firma zapewniająca VPS lub hosting, np. ProSerwer lub Home.pl
+                    </p>
+                    <p>
+                        <b>Nazwa serwera</b>
+                        <br>Nazwa własna dla serwera, np. 'Serwer #1' lub 'Główny Serwer Produkcyjny'
                     </p>
                     <p>
                         <b>Typ usługi</b>

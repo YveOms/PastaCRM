@@ -73,17 +73,17 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                             <td>
                                 <div class="row">
                                     <div class="col-lg-6">
-                                        <input class="form-control" type="text" name="first_name" value="<?= $client_data['first_name'] ?>" placeholder="Imię" required>
+                                        <input class="form-control" type="text" name="first_name" value="<?= $client_data['first_name'] ?>" placeholder="Imię" minlength="3" maxlength="100" onkeyup="checkInputLength(this, 3, 100, true)" required>
                                     </div>
                                     <div class="col-lg-6">
-                                        <input class="form-control" type="text" name="second_name" value="<?= $client_data['second_name'] ?>" placeholder="Nazwisko" required>
+                                        <input class="form-control" type="text" name="second_name" value="<?= $client_data['second_name'] ?>" placeholder="Nazwisko" minlength="3" maxlength="100" onkeyup="checkInputLength(this, 3, 100, true)" required>
                                     </div>
                                 </div>
                             </td>
                         </tr>
                         <tr>
                             <th><i class='fa fa-fw fa-phone'></i> Telefon kontaktowy</th>
-                            <td><input class="form-control" type="tel" name="phone" value="<?= $client_data['phone'] ?>" placeholder="Numer telefonu" maxlength=9></td>
+                            <td><input class="form-control" type="tel" name="phone" value="<?= $client_data['phone'] ?>" placeholder="Numer telefonu" minlength="9" maxlength="9" onkeyup="checkInputLength(this, 9, 9, true)"></td>
                         </tr>
                         <tr>
                             <th><i class='fa fa-fw fa-at'></i> Adres email</th>

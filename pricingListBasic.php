@@ -4,9 +4,7 @@
  * Uzywana na potrzeby aplikacji "Cennik" dla systemu Android.
  */
 require_once("inc/functions.php");
-
 $siteTitle = "Szybki Cennik";
-$key = "[UNIKALNY KOD ID]";
 @$android_ID = $_GET['android_ID'];
 ?>
 <!DOCTYPE HTML>
@@ -51,7 +49,7 @@ $key = "[UNIKALNY KOD ID]";
     <div class="col-lg-12">
         <h1>Cennik PastaMedia</h1>
         <?php
-            if($android_ID === $key){ // Android Unique ID
+            if($android_ID === ANDROID_KEY){
                 showInfo("Podane ceny nie zawierają kosztów podzespołów (w przypadku kosztów serwisowania sprzętu)
                         <br>Podane ceny są cenami <b>netto</b> oraz <b>brutto</b>.");
                 showPricingList(false);

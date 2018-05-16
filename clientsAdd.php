@@ -60,7 +60,7 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                                         <label>Imię <font color="red">*</font></label>
                                         <div class="input-group mb-2 mr-sm-2 mb-sm-0">
                                             <div class="input-group-addon"><i class="fa fa-fw fa-user"></i></div>
-                                            <input type="text" class="form-control" name="first_name" autocomplete="on" required>
+                                            <input type="text" class="form-control" name="first_name" autocomplete="on" minlength="3" maxlength="100" onkeyup="checkInputLength(this, 3, 100)" required>
                                         </div>
                                     </div>
 
@@ -68,7 +68,7 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                                         <label>Nazwisko <font color="red">*</font></label>
                                         <div class="input-group mb-2 mr-sm-2 mb-sm-0">
                                             <div class="input-group-addon"><i class="fa fa-fw fa-user"></i></div>
-                                            <input type="text" class="form-control" name="second_name" autocomplete="on" required>
+                                            <input type="text" class="form-control" name="second_name" autocomplete="on" minlength="3" maxlength="100" onkeyup="checkInputLength(this, 3, 100)" required>
                                         </div>
                                     </div>
 
@@ -77,7 +77,7 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                                             <label>Telefon kontaktowy</label>
                                             <div class="input-group mb-2 mr-sm-2 mb-sm-0">
                                                 <div class="input-group-addon"><i class="fa fa-fw fa-phone"></i></div>
-                                                <input type="tel" class="form-control" name="phone" autocomplete="off" minlength="9" maxlength="9">
+                                                <input type="tel" class="form-control" name="phone" autocomplete="off" minlength="9" maxlength="9" onkeyup="checkInputLength(this, 9, 9)">
                                             </div>
                                         </div>
 

@@ -66,7 +66,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                     <div id="websites_finished" class="panel-collapse collapse">
                     <div class="panel-body">
                         <?php
-                            showInfo("Strony pokazane w tej kategorii zostały ukończone, ale administrowanie i zarządzanie tymi stronami oraz ich hostingiem zostało oddane klientowi.<br>Każda strona w tej kategorii powinna posiadać załączony dokument: <b>formularz zakończenia współpracy</b>.");
+                            showInfo("Strony pokazane w tej kategorii zostały ukończone, ale administrowanie i zarządzanie tymi stronami oraz ich hostingiem zostało oddane klientowi lub strony zostały zawieszone oraz zniknęły z sieci Internet.<br>Każda strona w tej kategorii powinna posiadać załączony dokument: <b>formularz zakończenia współpracy</b>.");
                             showWebsites("finished");
                         ?>
                     </div>

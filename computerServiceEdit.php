@@ -99,7 +99,7 @@ if(checkUserPermissions(1) || checkUserPermissions(3)){
                             <select class="selectpicker form-control" name="id_client" data-live-search="true">
                                 <option value="">- - -</option>
                                 <?php
-                                    showClientsDopdown($client_data['id_unique']);
+                                    showClientsDropdown($client_data['id_unique']);
                                 ?>
                             </select>
                         </td>
@@ -121,7 +121,7 @@ if(checkUserPermissions(1) || checkUserPermissions(3)){
                     <tr>
                         <th><i class="fa fa-fw fa-laptop"></i> Urządzenie</th>
                         <td>
-                            <input type="text" class="form-control" name="device" value="<?= $service_info['device'] ?>">
+                            <input type="text" class="form-control" name="device" value="<?= $service_info['device'] ?>" minlength="4" maxlength="100" onkeyup="checkInputLength(this, 4, 100, true)" required>
                         </td>
                     </tr>
                     <tr>
@@ -157,34 +157,33 @@ if(checkUserPermissions(1) || checkUserPermissions(3)){
                 <div class="panel-body">
                     <?php
                         if(@$_GET['status'] == "uploadPhoto")
-                            uploadFile("uploads/img/computer_service/".$id_u."/", "jpg", "photo.jpg");
+                            uploadFile("uploads/img/computer_service/".$id_u."/", "jpg", "photo.jpg", 1000);
                         if(@$_GET['status'] == "deletePhoto")
                             deleteFile("uploads/img/computer_service/".$id_u."/photo.jpg");
 
                         if(file_exists("uploads/img/computer_service/".$id_u."/photo.jpg")){
                     ?>
-                        
-                        <form action="?id_u=<?= $id_u ?>&status=uploadPhoto" method="post" enctype="multipart/form-data">
-                            <label class="btn btn-success" for="select_photo">
-                            <input id="select_photo" type="file" style="display:none;" onchange="this.form.submit()" name="document">
-                                <i class="fa fa-refresh"></i> Zmień aktualne zdjęcie
-                            </label>
-                        </form>
-                        <a href="?id_u=<?= $id_u ?>&status=deletePhoto">
-                            <button class='btn btn-danger' onclick="return confirm('Jesteś pewien, że chcesz usunąć aktualne zdjęcie?')"><i class='fa fa-trash'></i> Usuń aktualne zdjęcie</button>
-                        </a>
-                        <?php
-                            }else{
-                        ?>
-                        <form action="?id_u=<?= $id_u ?>&status=uploadPhoto" method="post" enctype="multipart/form-data">
-                            <label class="btn btn-success" for="select_photo">
-                            <input id="select_photo" type="file" style="display:none;" onchange="this.form.submit()" name="document">
-                                <i class="fa fa-upload"></i> Wyślij nowe zdjęcie
-                            </label>
-                        </form>
-                        <?php
-                            }
-                        ?>
+                    <form action="?id_u=<?= $id_u ?>&status=uploadPhoto" method="post" enctype="multipart/form-data">
+                        <label class="btn btn-success" for="select_photo">
+                        <input id="select_photo" type="file" style="display:none;" onchange="this.form.submit()" name="document">
+                            <i class="fa fa-refresh"></i> Zmień aktualne zdjęcie
+                        </label>
+                    </form>
+                    <a href="?id_u=<?= $id_u ?>&status=deletePhoto">
+                        <button class='btn btn-danger' onclick="return confirm('Jesteś pewien, że chcesz usunąć aktualne zdjęcie?')"><i class='fa fa-trash'></i> Usuń aktualne zdjęcie</button>
+                    </a>
+                    <?php
+                        }else{
+                    ?>
+                    <form action="?id_u=<?= $id_u ?>&status=uploadPhoto" method="post" enctype="multipart/form-data">
+                        <label class="btn btn-success" for="select_photo">
+                        <input id="select_photo" type="file" style="display:none;" onchange="this.form.submit()" name="document">
+                            <i class="fa fa-upload"></i> Wyślij nowe zdjęcie
+                        </label>
+                    </form>
+                    <?php
+                        }
+                    ?>
                 </div>
             </div>
             

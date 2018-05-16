@@ -52,9 +52,11 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                             "date_created" => $_POST['date_created'],
                             "website_name" => $_POST['website_name'],
                             "website_address" => $_POST['website_address'],
-                            "server_provider" => $_POST['server_provider'],
-                            "domain_provider" => $_POST['domain_provider'],
+                            "id_server" => $_POST['server'],
+                            "id_domain_provider" => $_POST['domain_provider'],
                             "domain_expire_date" => $_POST['domain_expire_date'],
+                            "id_ssl_provider" => $_POST['ssl_provider'],
+                            "ssl_expire_date" => $_POST['ssl_expire_date'],
                             "payment_for_me" => $_POST['payment_for_me'],
                             "payment_for_me_date" => $_POST['payment_for_me_date'],
                             "status" => $_POST['status'],
@@ -75,6 +77,9 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                     $website_data = getWebsiteData($id_u);
                     if($website_data != null){
                         $client_data = getClientData($website_data['id_contact_person']);
+                        $server_provider = getProviderData($website_data['id_server']);
+                        $domain_provider = getProviderData($website_data['id_domain_provider']);
+                        $ssl_provider = getProviderData($website_data['id_ssl_provider']);
                         
                         $status_list = "";
                         $cms_list = "";
@@ -90,40 +95,35 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                             else
                                 $cms_list .= "<option value='$i'>".getCmsName($i)."</option>";
                         }
-                        $servers = getServerList();
-                        $servers_list = "";
-                        foreach ($servers as $key => $data) {
-                            if($website_data['server_provider'] == $key)
-                                $servers_list .= "<option value='$key' selected>".$data."</option>";
-                            else
-                                $servers_list .= "<option value='$key'>".$data."</option>";
-                        }
                 ?>
                 <form method="post">
                     <table class="table table-bordered table-striped">
                         <tr>
                             <th><i class="fa fa-calendar-check-o"></i> Data utworzenia</th>
                             <td>
-                                <input type="date" class="form-control" name="date_created" id="date_created" value="<?= $website_data['date_created']; ?>" autocomplete="off" />
+                                <input type="date" class="form-control" name="date_created" value="<?= $website_data['date_created']; ?>" autocomplete="off" />
                             </td>
                         </tr>
                         <tr>
                             <th><i class="fa fa-underline"></i> Nazwa strony</th>
                             <td>
-                                <input type="text" class="form-control" name="website_name" value="<?= $website_data['name']; ?>"/>
+                                <input type="text" class="form-control" name="website_name" value="<?= $website_data['name']; ?>" minlength="2" maxlength="100" onkeyup="checkInputLength(this, 2, 100, true)"/>
                             </td>
                         </tr>
                         <tr>
                             <th><i class="fa fa-link"></i> Adres internetowy</th>
                             <td>
-                                <input type="text" class="form-control" name="website_address" value="<?= $website_data['web_address']; ?>"/>
+                                <input type="text" class="form-control" name="website_address" value="<?= $website_data['web_address']; ?>" minlength="4" maxlength="100" onkeyup="checkInputLength(this, 4, 100, true)"/>
                             </td>
                         </tr>
                         <tr>
-                            <th><i class="fa fa-server"></i> Dostawca serwera</th>
+                            <th><i class="fa fa-server"></i> Serwer</th>
                             <td>
-                                <select name="server_provider" class="selectpicker" data-width="100%">
-								    <?= $servers_list ?>
+                                <select name="server" class="selectpicker" data-width="100%">
+                                <option value="">- - -</option>
+                                    <?php
+                                        showServersDopdown($server_provider['id']);
+                                    ?>
                                 </select>
                             </td>
                         </tr>
@@ -136,13 +136,35 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                         <tr>
                             <th><i class="fa fa-database"></i> Dostawca domeny</th>
                             <td>
-                                <input type="text" class="form-control" name="domain_provider" value="<?= $website_data['domain_provider']; ?>"/>
+                                <select class="selectpicker form-control" name="domain_provider" data-live-search="true">
+                                    <option value="">- - -</option>
+                                    <?php
+                                        showProvidersDopdown($domain_provider['id']);
+                                    ?>
+                                </select>
                             </td>
                         </tr>
                         <tr>
                             <th><i class="fa fa-calendar"></i> Data wygaśnięcia domeny</th>
                             <td>
                                 <input type="date" class="form-control" name="domain_expire_date" id="domain_expire_date" value="<?= $website_data['domain_expire_date']; ?>" autocomplete="off" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><i class="fa fa-lock"></i> Dostawca certyfikatu SSL</th>
+                            <td>
+                                <select class="selectpicker form-control" name="ssl_provider" data-live-search="true">
+                                    <option value="">- - -</option>
+                                    <?php
+                                        showProvidersDopdown($ssl_provider['id']);
+                                    ?>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><i class="fa fa-calendar"></i> Data wygaśnięcia cert. SSL</th>
+                            <td>
+                                <input type="date" class="form-control" name="ssl_expire_date" value="<?= $website_data['ssl_expire_date']; ?>" autocomplete="off" />
                             </td>
                         </tr>
                         <tr>
@@ -157,7 +179,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                         <tr>
                             <th><i class="fa fa-calendar"></i> Data najbliższej płatności</th>
                             <td>
-                                <input type="date" class="form-control" name="payment_for_me_date" id="payment_for_me_date" value="<?= $website_data['payment_for_me_date']; ?>" autocomplete="off" />
+                                <input type="date" class="form-control" name="payment_for_me_date" value="<?= $website_data['payment_for_me_date']; ?>" autocomplete="off" />
                             </td>
                         </tr>
                         <tr>
@@ -199,7 +221,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                 <select class="selectpicker form-control" name="contact_person" data-live-search="true">
                                     <option value="">- - -</option>
                                     <?php
-                                        showClientsDopdown($client_data['id_unique']);
+                                        showClientsDropdown($client_data['id_unique']);
                                     ?>
                                 </select>
                             </td>
@@ -217,10 +239,11 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                     <option value="">- - -</option>
                                     <?php
                                         $client_data = getClientData($website_data['id_contact_person2']);
-                                        if($website_data['id_contact_person2'])
-                                            showClientsDopdown($client_data['id_unique']);
-                                        else
-                                            showClientsDopdown();
+                                        if($website_data['id_contact_person2']){
+                                            showClientsDropdown($client_data['id_unique']);
+                                        }else{
+                                            showClientsDropdown();
+                                        }
                                     ?>
                                 </select>
                             </td>
@@ -324,7 +347,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                 <div class="panel-body">
                     <?php
                         if(@$_GET['status'] == "uploadFile"){
-                            uploadFile("uploads/doc/websites/".$id_u."/", "pdf");
+                            uploadFile("uploads/doc/websites/".$id_u."/", "pdf,iso,zip");
                         }
 
                         if(@$_GET['status'] == "deleteDocument"){

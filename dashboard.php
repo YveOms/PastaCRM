@@ -39,6 +39,7 @@ if(checkUserPermissions(3)){
 
                             checkDomainExpire();
                             checkServersExpire();
+                            checkSSLExpire();
                             
                             checkLogAnomaly();
                         ?>

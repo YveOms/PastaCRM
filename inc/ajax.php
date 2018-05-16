@@ -1,6 +1,9 @@
 <?php
 require_once("functions.php");
 
+if(!DEBUG)
+    error_reporting(0);
+
 /* --------------------------------------------------
  * 0. Przyjmowanie i uruchamianie funkcji przez AJAX
  * -------------------------------------------------- */

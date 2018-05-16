@@ -161,6 +161,71 @@ if(checkUserPermissions(1) || checkUserPermissions(2) ||checkUserPermissions(3))
         <!-- Przyspieszenie Wordpress'a -->
         <div class="panel panel-default">
             <div class="panel-heading">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapse_6639328394">
+                    <b>Konfiguracja pliku .htaccess</b>
+                    <span class="label label-warning pull-right">Optymalizacja</span>
+                </a>
+            </div>
+            <div id="collapse_6639328394" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <p>
+                        Najważniejsze założenia podanej konfiguracji pliku htaccess:
+                        <ol>
+                            <li>Kompresja GZIP</li>
+                            <li>Cache plików</li>
+                            <li>Wymuszenie bezpiecznego ruchu HTTPS</li>
+                        </ol>
+                    </p>
+<pre>
+<code>
+## GZIP COMPRESSION ##
+&lt;IfModule mod_deflate.c>
+SetOutputFilter DEFLATE
+&lt;/IfModule>
+## GZIP COMPRESSION ##
+
+## EXPIRES CACHING ##
+&lt;IfModule mod_expires.c>
+AddType text/javascript .js
+ExpiresActive On
+ExpiresByType image/jpg "access plus 1 year"
+ExpiresByType image/jpeg "access plus 1 year"
+ExpiresByType image/gif "access plus 1 year"
+ExpiresByType image/png "access plus 1 year"
+ExpiresByType text/css "access plus 1 month"
+ExpiresByType application/pdf "access plus 1 month"
+ExpiresByType text/x-javascript "access plus 1 month"
+ExpiresByType image/x-icon "access plus 1 year"
+ExpiresDefault "access plus 2 days"
+&lt;/IfModule>
+
+&lt;IfModule mod_headers.c>
+    &lt;FilesMatch "\\.(ico|jpe?g|png|gif|swf|css|js)$">
+        Header set Cache-Control "max-age=2692000, public"
+    &lt;/FilesMatch>
+    &lt;FilesMatch "\\.(x?html?|php)$">
+        Header set Cache-Control "max-age=600, private, must-revalidate"
+    &lt;/FilesMatch>
+#    Header unset ETag
+#    Header unset Last-Modified
+&lt;/IfModule>
+## EXPIRES CACHING ##
+
+## FORCE HTTPS SSL ##
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+## FORCE HTTPS SSL ##
+</code>
+</pre>
+                </div>
+                <div class="panel-footer"><i>Ostatnia aktualizacja: 25-04-2018</i></div>
+            </div>
+        </div>
+        
+        <!-- Przyspieszenie Wordpress'a -->
+        <div class="panel panel-default">
+            <div class="panel-heading">
                 <a data-toggle="collapse" data-parent="#accordion" href="#collapse_6639328341">
                     <b>Przyspieszenie Wordpress'a</b>
                     <span class="label label-warning pull-right">Optymalizacja</span>
