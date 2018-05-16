@@ -86,7 +86,7 @@ if(checkUserPermissions(1) || checkUserPermissions(3)){
                                             <select class="selectpicker form-control" name="id_client" data-live-search="true">
                                                 <option value="">- - -</option>
                                                 <?php
-                                                    showClientsDopdown();
+                                                    showClientsDropdown();
                                                 ?>
                                             </select>
                                             <span class="input-group-btn">
@@ -99,7 +99,7 @@ if(checkUserPermissions(1) || checkUserPermissions(3)){
                                         <label>Urządzenie <font color="red">*</font></label>
                                         <div class="input-group mb-2 mr-sm-2 mb-sm-0">
                                             <div class="input-group-addon"><i class="fa fa-fw fa-laptop"></i></div>
-                                            <input type="text" class="form-control" name="device" autocomplete="on" required>
+                                            <input type="text" class="form-control" name="device" autocomplete="on" minlength="4" maxlength="100" onkeyup="checkInputLength(this, 4, 100)" required>
                                         </div>
                                     </div>
 

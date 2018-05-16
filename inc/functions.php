@@ -109,7 +109,7 @@ function addUser(array $user_data){
  * Funkcja dodajaca nowa strone internetowa do bazy. Przed dodaniem dane sa walidowane.
  *
  * @param array $website_data - wszystkie dane na temat nowej strony, ktore musza zostac wprowadzone do bazy.
- * @version 1.0.0
+ * @version 1.0.2
  */
 function addWebsite(array $website_data){
     foreach ($website_data as $key => &$value){
@@ -118,6 +118,13 @@ function addWebsite(array $website_data){
             $value = str_replace("&amp;#34;", "\'", $value);
             $value = str_replace("&amp;#39;", "\'", $value);
         }
+        if($key == "server"){
+            if($value == ""){
+                $value = "NULL";
+            }else{
+                $value = "'".$value."'";
+            }
+        }
     }
 
     $errors = [];
@@ -125,8 +132,8 @@ function addWebsite(array $website_data){
         $errors[] = "Nazwa strony nie może być krótrza niż 2 znaki! (minimum 2 znaki)";
     if(strlen($website_data['website_address'])<4)
         $errors[] = "Adres internetowy nie może być krótrzy niż 4 znaki! (minimum 4 znaki)";
-    if(!is_numeric($website_data['server_provider']))
-        $errors[] = "Niepoprawny identyfikator dostawcy serwera!";
+    if(!is_numeric($website_data['server']) && $website_data['server'] !== null)
+        $errors[] = "Niepoprawny identyfikator dostawcy serwera";
     if(!is_numeric($website_data['cms']))
         $errors[] = "Niepoprawny identyfikator systemu zarządzania treścią (CMS)!";
     if(!is_numeric($website_data['status']))
@@ -137,8 +144,8 @@ function addWebsite(array $website_data){
         $errors[] = "W adresie strony internetowej należy pominąć przedrostek 'http://'!";
     
     if(empty($errors)){
-        $zapytanie = "INSERT INTO `websites` (`id_unique`, `name`, `web_address`, `server_provider`, `cms`, `id_contact_person`, `status`)
-            VALUES ('".md5(uniqid())."', '".$website_data['website_name']."', '".$website_data['website_address']."', '".$website_data['server_provider']."', '".$website_data['cms']."', '".$website_data['contact_person']."', '".$website_data['status']."')";
+        $zapytanie = "INSERT INTO `websites` (`id_unique`, `name`, `web_address`, `id_server`, `cms`, `id_contact_person`, `status`)
+            VALUES ('".md5(uniqid())."', '".$website_data['website_name']."', '".$website_data['website_address']."', ".$website_data['server'].", '".$website_data['cms']."', '".$website_data['contact_person']."', '".$website_data['status']."')";
         $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
         if($query){
             @header("Location: websites.php");
@@ -156,20 +163,22 @@ function addWebsite(array $website_data){
  * Funkcja dodajaca nowy serwer do systemu. Przed dodaniem dane sa walidowane.
  * 
  * @param array $server_data
- * @version 1.0.0
+ * @version 1.0.1
  */
 function addServer(array $server_data){
     foreach ($server_data as $key => &$value) {
         $value = validate($value);
     }
     $errors = [];
-    if(strlen($server_data['server_provider']) < 2)
-        $errors[] = "Nazwa dostawcy serwera nie może być krótrza niż 2 znaki! (minimum 2 znaki)";
+    if(strlen($server_data['server_name']) < 4)
+        $errors[] = "Nazwa serwera musi zawierać przynajmniej 4 znaki";
+    if(!is_numeric($server_data['id_server_provider']))
+        $errors[] = "Niepoprawny identyfikator dostawcy usługi";
     if(!is_numeric($server_data['type']))
         $errors[] = "Niepoprawny identyfikator typu usługi";
 
     if(empty($errors)){
-        $zapytanie = "INSERT INTO `servers` (`id_unique`, `server_provider`, `expires_date`, `type`, `comment`) VALUES ('".md5(uniqid())."', '".$server_data['server_provider']."', '".$server_data['expires_date']."', '".$server_data['type']."', '".$server_data['comment']."')";
+        $zapytanie = "INSERT INTO `servers` (`id_unique`, `id_server_provider`, `name`, `expires_date`, `type`, `comment`) VALUES ('".md5(uniqid())."', '".$server_data['id_server_provider']."', '".$server_data['server_name']."', '".$server_data['expires_date']."', '".$server_data['type']."', '".$server_data['comment']."')";
         $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
         if($query){
             showSuccess("Pomyślnie dodano nową usługę do bazy!");
@@ -231,7 +240,7 @@ function addComputerService(array $service_data){
  * 4) email - adres email
  * 5) address - fizyczny adres zamieszkania
  * 6) comment - dodatkowy komentarz lub opis
- * @version 1.0.1
+ * @version 1.0.2
  */
 function addClient(array $client_data){
     foreach ($client_data as $key => &$value) {
@@ -247,6 +256,8 @@ function addClient(array $client_data){
         $errors[] = "Nazwisko nie może być krótrze niż 3 znaki! (minimum 3 znaki)";
     if($client_data['phone'] != null && !is_numeric($client_data['phone']))
         $errors[] = "Podany numer telefonu musi składać się tylko z cyfr!";
+    if($client_data['phone'] != null && strlen($client_data['phone']) != 9)
+        $errors[] = "Podany numer telefonu musi składać się dokładnie z 9 cyfr!";
     if($client_data['email'] != null && !filter_var($client_data['email'], FILTER_VALIDATE_EMAIL))
         $errors[] = "Podany adres email musi posiadać małpę (@), kropkę oraz domenę!";
 
@@ -263,6 +274,34 @@ function addClient(array $client_data){
         }
     }else{
         showError("Podczas dodawania nowego klienta do bazy wystąpiły następujące problemy:<ul><li>".implode("</li><li>", $errors)."</li></ul>");
+        return false;
+    }
+}
+
+/**
+ * Funkcja dodajaca nowego dostawce uslug to bazy danych. Przed dodaniem waliduje i sprawdza dane.
+ *
+ * @param string $name - nazwa nowego dostawcy uslug
+ * @version 1.0.0
+ */
+function addProvider(string $name){
+    $errors = [];
+    if(strlen($name) < 3)
+        $errors[] = "Nazwa nie może być krótrza niż 3 znaki! (minimum 3 znaki)";
+
+    if(empty($errors)){
+        $zapytanie = "INSERT INTO `providers` (`provider_name`) VALUES ('".validate($name)."')";
+        $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+        if($query){
+            showSuccess("Nowy dostawca usług został pomyślnie dodany!");
+            return true;
+        }else{
+            showError("Nie udało się dodać nowego dostawcy usług do bazy!<br>Jeśli problem będzie się powtarzał, skontaktuj się z administratorem systemu!");
+            addToLog(3, "Wystąpił błąd podczas dodawana nowego dostawcy usług do bazy! (błąd MySQL)");
+            return false;
+        }
+    }else{
+        showError("Podczas dodawania nowego dostawcy usług do bazy wystąpiły następujące problemy:<ul><li>".implode("</li><li>", $errors)."</li></ul>");
         return false;
     }
 }
@@ -363,7 +402,7 @@ function addNewPayment(string $mode, int $id, string $date, float $amount, strin
 /**
  * Funkcja logujaca aktywnosc. Waliduje dane na wejsciu, a nastepnie wprowadza je do bazy danych.
  * 
- * @param int $type - poziom waznosci:
+ * @param int $type - waga komunikatu:
  * 1: Informacja,
  * 2: Ostrzezenie,
  * 3: Blad.
@@ -389,7 +428,7 @@ function addToLog(int $type, string $comment){
  * Funkcja edytujaca strone internetowa. Przed dodaniem dane sa walidowane.
  *
  * @param array $website_data - tablica z danymi do zapisania.
- * @version 1.0.1
+ * @version 1.0.2
  */
 function editWebsite(array $website_data){
     foreach ($website_data as $key => &$value){
@@ -398,9 +437,8 @@ function editWebsite(array $website_data){
             $value = str_replace("&amp;#34;", "\'", $value);
             $value = str_replace("&amp;#39;", "\'", $value);
         }
-        if($key == "contact_person" || $key == "contact_person2"){
-            if($value == "")
-                $value = "NULL";
+        if($value == ""){
+            $value = null;
         }
     }
     
@@ -411,23 +449,46 @@ function editWebsite(array $website_data){
         $errors[] = "Adres internetowy nie może być krótrzy niż 4 znaki! (minimum 4 znaki)";
     if($website_data['contact_person'] == null)
         $errors[] = "Nie wybrano głównej osoby kontaktowej (klienta)";
-    if($website_data['status'] != 0 && $website_data['date_created'] == "0000-00-00")
-        $errors[] = "Zaznaczono ukończenie strony, ale nie podano daty utworzenia!";
-
-    if(!is_numeric($website_data['server_provider']))
-        $errors[] = "Niepoprawny identyfikator dostawcy serwera!";
+    if($website_data['status'] != 0 && $website_data['status'] != 3 && $website_data['date_created'] == null)
+        $errors[] = "Zaznaczono ukończenie strony, ale nie podano daty utworzenia";
+    if(!is_numeric($website_data['id_server']) && $website_data['id_server'] !== null)
+        $errors[] = "Niepoprawny identyfikator dostawcy serwera";
+    if(!is_numeric($website_data['id_domain_provider']) && $website_data['id_domain_provider'] !== null)
+        $errors[] = "Niepoprawny identyfikator dostawcy domeny";
+    if(!is_numeric($website_data['id_ssl_provider']) && $website_data['id_ssl_provider'] !== null)
+        $errors[] = "Niepoprawny identyfikator dostawcy cetyfikacji SSL!";
     if(!is_numeric($website_data['cms']))
-        $errors[] = "Niepoprawny identyfikator systemu zarządzania treścią!";
+        $errors[] = "Niepoprawny identyfikator systemu zarządzania treścią";
     if(!is_numeric($website_data['status']))
-        $errors[] = "Niepoprawny identyfikator statusu strony!";
+        $errors[] = "Niepoprawny identyfikator statusu strony";
+    if($website_data['id_domain_provider'] !== null && $website_data['domain_expire_date'] == null)
+        $errors[] = "Wprowadzono dostawcę domeny, ale nie ustawiono daty wygaśnięcia domeny";
+    if($website_data['id_ssl_provider'] !== null && $website_data['ssl_expire_date'] == null)
+        $errors[] = "Wprowadzono dostawcę certyfikatu SSL, ale nie ustawiono daty wygaśnięcia certyfikatu";
     
     if(empty($errors)){
-        $zapytanie = "UPDATE `websites` SET `date_created` = '".$website_data['date_created']."', `name` = '".$website_data['website_name']."', `web_address` = '".$website_data['website_address']."',
-                        `server_provider` = '".$website_data['server_provider']."', `domain_provider` = '".$website_data['domain_provider']."', `domain_expire_date` = '".$website_data['domain_expire_date']."',
-                        `payment_for_me` = '".$website_data['payment_for_me']."', `payment_for_me_date` = '".$website_data['payment_for_me_date']."', `status` = '".$website_data['status']."',
-                        `cms` = '".$website_data['cms']."', `comment` = '".$website_data['comment']."', `id_contact_person` = ".$website_data['contact_person'].",
-                        `id_contact_person2` = ".$website_data['contact_person2']."
-                        WHERE `websites`.`id_unique` LIKE '".$website_data['id_u']."'";
+        foreach ($website_data as $key => &$value) {
+            if($value == null && $key != "comment"){
+                $value = "NULL";//MySQL
+            }
+        }
+        $zapytanie = "UPDATE `websites` SET
+        `date_created` = '".$website_data['date_created']."',
+        `name` = '".$website_data['website_name']."',
+        `web_address` = '".$website_data['website_address']."',
+        `id_server` = ".$website_data['id_server'].",
+        `id_domain_provider` = ".$website_data['id_domain_provider'].",
+        `domain_expire_date` = '".$website_data['domain_expire_date']."',
+        `id_ssl_provider` = ".$website_data['id_ssl_provider'].",
+        `ssl_expire_date` = '".$website_data['ssl_expire_date']."',
+        `payment_for_me` = '".$website_data['payment_for_me']."',
+        `payment_for_me_date` = '".$website_data['payment_for_me_date']."',
+        `status` = '".$website_data['status']."',
+        `cms` = '".$website_data['cms']."',
+        `comment` = '".$website_data['comment']."',
+        `id_contact_person` = ".$website_data['contact_person'].",
+        `id_contact_person2` = ".$website_data['contact_person2']."
+        WHERE `websites`.`id_unique` LIKE '".$website_data['id_u']."'";
 
         if(mysqli_query($GLOBALS['polaczenie'], $zapytanie)){
             showSuccess("Dane strony zostały zaktualizowane!");
@@ -436,7 +497,7 @@ function editWebsite(array $website_data){
             showError("Podczas edycji strony wystąpił nieznany błąd!");
         }
     }else{
-        showError("Podczas edycji strony wystąpiły następujące błędy:<ul><li>".implode("</li><li>", $errors)."</li></ul>");
+        showError("Podczas edycji strony wystąpiły następujące błędy:<ul><li>".implode(",</li><li>", $errors).".</li></ul>");
     }
 }
 
@@ -444,24 +505,37 @@ function editWebsite(array $website_data){
  * Funkcja edytujaca dane serwera. Przed edycja dane sa weryfikowane.
  *
  * @param array $server_data - tablica zawierajaca dane serwera.
- * @version 1.0.1
+ * @version 1.0.3
  */
 function editServer(array $server_data){
     foreach ($server_data as $key => &$value) {
         $value = validate($value);
     }
-    $zapytanie = "UPDATE `servers` SET
-                    `server_provider` = '".$server_data['server_provider']."',
-                    `expires_date` = '".$server_data['expires_date']."',
-                    `type` = '".$server_data['server_type']."',
-                    `comment` = '".$server_data['comment']."'
-                    WHERE `servers`.`id_unique` LIKE '".$server_data['id_u']."'";
-    $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
-    if($query){
-        showSuccess("Dane serwera zostały zaktualizowane!");
+    $errors = [];
+    if(strlen($server_data['server_name']) < 4)
+        $errors[] = "Nazwa serwera musi zawierać przynajmniej 4 znaki";
+    if(!is_numeric($server_data['id_server_provider']))
+        $errors[] = "Niepoprawny identyfikator dostawcy usługi";
+    if(!is_numeric($server_data['server_type']))
+        $errors[] = "Niepoprawny identyfikator typu usługi";
+
+    if(empty($errors)){
+        $zapytanie = "UPDATE `servers` SET
+                        `id_server_provider` = ".$server_data['id_server_provider'].",
+                        `name` = '".$server_data['server_name']."',
+                        `expires_date` = '".$server_data['expires_date']."',
+                        `type` = '".$server_data['server_type']."',
+                        `comment` = '".$server_data['comment']."'
+                        WHERE `servers`.`id_unique` LIKE '".$server_data['id_u']."'";
+        $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+        if($query){
+            showSuccess("Dane serwera zostały zaktualizowane!");
+        }else{
+            addToLog(2, "Podczas edycji danych serwera wystąpił błąd!");
+            showError("Podczas aktualizacji danych serwera wystąpił błąd!<br>Jeśli problem będzie się powtarzał, skontaktuj się z administratorem systemu!");
+        }
     }else{
-        addToLog(2, "Podczas edycji danych serwera wystąpił błąd!");
-        showError("Podczas aktualizacji danych serwera wystąpił błąd!<br>Jeśli problem będzie się powtarzał, skontaktuj się z administratorem systemu!");
+        showError("Podczas edycji serwera wystąpiły następujące błędy:<ul><li>".implode("</li><li>", $errors)."</li></ul>");
     }
 }
 
@@ -513,7 +587,7 @@ function editComputerService(array $service_data){
  * Funkcja odpowiadajaca za edycje danych klienta.
  *
  * @param array $client_data - tablica zawierajaca dane klienta do umieszczenia w bazie.
- * @version 1.0.1
+ * @version 1.0.2
  */
 function editClient(array $client_data){
     foreach ($client_data as $key => &$value) {
@@ -529,6 +603,8 @@ function editClient(array $client_data){
         $errors[] = "Nazwisko nie może być krótrze niż 3 znaki! (minimum 3 znaki)";
     if($client_data['phone'] != null && !is_numeric($client_data['phone']))
         $errors[] = "Podany numer telefonu musi składać się tylko z cyfr!";
+    if($client_data['phone'] != null && strlen($client_data['phone']) != 9)
+        $errors[] = "Podany numer telefonu musi składać się dokładnie z 9 cyfr!";
     if($client_data['email'] != null && !filter_var($client_data['email'], FILTER_VALIDATE_EMAIL))
         $errors[] = "Podany adres email musi posiadać małpę (@), kropkę oraz domenę!";
 
@@ -696,12 +772,13 @@ function movePricingListItem(int $id, int $direction){
  * w tablicy $allowed_global_ext).
  *
  * @param string $path - pelna sicezka do ktorej ma trafic plik, wraz z nazwa i rozszerzeniem pliku
- * @param string $allowed_local_ext - dozwolone rozszerzenie pliku
+ * @param string $allowed_local_ext - dozwolone rozszerzenia pliku
  * @param string $static_name - domyslne null. W razie podania, system ustawi statyczna nazwe pliku a nastepnie wysle go na serwer.
- * @param bool $resize - domyslne null. Parametr dotyczy tylko wysylanych zdjec. W przypadku true wymiary wysylanego zdjecia zostana zmienione.
- * @version 1.0.0
+ * @param int $resize - domyslne null. Parametr dotyczy tylko wysylanych zdjec. W przypadku liczby wymiary
+ * wysylanego zdjecia zostana zmienione (liczba oznacza max ilosc pikseli najdluzszego boku).
+ * @version 1.0.2
  */
-function uploadFile(string $path, string $allowed_local_ext, string $static_name = null, bool $resize = null){
+function uploadFile(string $path, string $allowed_local_ext, string $static_name = null, int $resize = null){
     $file_size  = $_FILES['document']['size'];
     $file_name 	= $_FILES['document']['name'];
     $file_tmp   = $_FILES['document']['tmp_name'];
@@ -713,11 +790,17 @@ function uploadFile(string $path, string $allowed_local_ext, string $static_name
         "pdf",
         "png",
         "jpg",
-        "jpeg"
+        "jpeg",
+        "iso",
+        "zip"
     ];
 
-    if($file_ext !== $allowed_local_ext)
-        $errors[] = "Nieprawidłowe rozszerzenie pliku! Wyślij plik .$allowed_local_ext!";
+    $allowed_local_ext = explode(",", $allowed_local_ext);
+
+    if(!in_array($file_ext, $allowed_local_ext))
+        $errors[] = "Nieprawidłowe rozszerzenie pliku! Wyślij plik .".implode(", ", $allowed_local_ext)."!";
+    elseif(!in_array($file_ext, $allowed_global_ext))
+        $errors[] = "W systemie nie dozwolono wysyłania pliku, który próbujesz wysłać!<br>Dozwolone rozszerzenia to: ".implode(", ", $allowed_global_ext);
     if($file_size > ($max_size*1048576))
         $errors[] = "Wysyłany plik jest za duży! Maksymalny rozmiar to ".($max_size*1048576)." MiB.";
     if(!is_readable($file_tmp))
@@ -728,8 +811,6 @@ function uploadFile(string $path, string $allowed_local_ext, string $static_name
         $errors[] = "Katalog tymczasowy nie posiada odpowiednich praw zapisu!";
     if(!is_writeable($path))
         $errors[] = "Katalog docelowy nie posiada odpowiednich praw zapisu!";
-    if(!in_array($file_ext, $allowed_global_ext))
-        $errors[] = "W systemie nie dozwolono wysyłania pliku, który próbujesz wysłać!<br>Dozwolone rozszerzenia to: ".implode(", ", $allowed_global_ext);
 
     if(empty($errors)){
         if(!$static_name){
@@ -748,10 +829,25 @@ function uploadFile(string $path, string $allowed_local_ext, string $static_name
         if(strtoupper(substr(PHP_OS, 0, 3)) == "WIN")
             $file_name = str_replace(":", "-", $file_name);
 
-        //TODO
-        if($resize){
+        if(is_int($resize)){
             if(!in_array($file_ext, ['png, jpg, jpeg'])){
+                $dimensions = getimagesize($file_tmp);
+                $width = $dimensions[0];
+                $height = $dimensions[1];
+                $ratio = $width / $height;
 
+                if($width/$height > $ratio){
+                    $new_width = $resize*$ratio;
+                    $new_height = $resize;
+                }else{
+                    $new_height = $resize/$ratio;
+                    $new_width = $resize;
+                }
+                
+                $source = imagecreatefromjpeg($file_tmp);
+                $destination = imagecreatetruecolor($new_width, $new_height);
+                imagecopyresampled($destination, $source, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
+                imagejpeg($destination, $file_tmp, 90);
             }
         }
 
@@ -858,7 +954,7 @@ function deletePricingList(int $id){
  * Usunie tylko pliki, ktorych rozszerzenia zostaly do tego dopuszczone.
  *
  * @param string $file - sciezka do pliku wraz z jego rozszerzeniem, np. '/doc/file_001.pdf'
- * @version 1.0.0
+ * @version 1.0.1
  */
 function deleteFile(string $file){
     if(file_exists($file)){
@@ -866,12 +962,14 @@ function deleteFile(string $file){
             "pdf",
             "png",
             "jpg",
-            "jpeg"
+            "jpeg",
+            "iso",
+            "zip"
         ];
         $ext = pathinfo($file, PATHINFO_EXTENSION);
         if(in_array($ext, $allowed_ext)){
             if(unlink($file)){
-                addToLog(1, "Plik $file został właśnie usunięty przez użytkownika ".getUserLogin($_SESSION['JezusServerHome']));
+                addToLog(1, "Plik <i>$file</i> został właśnie usunięty przez użytkownika ".getUserLogin($_SESSION['JezusServerHome']));
                 showSuccess("Plik został usunięty!");
             }else{
                 showError("Podczas usuwania pliku wystąpił nieznany błąd!");
@@ -889,29 +987,34 @@ function deleteFile(string $file){
  * nie sa podpiete jakiekolwiek strony internetowe. Jesli sa, funkcja wyswietla blad.
  *
  * @param string $id_u
- * @version 1.0.0
+ * @version 1.0.1
  */
 function deleteServer(string $id_u){
-    $zapytanie = "SELECT `id` FROM `servers` WHERE `id_unique` LIKE '".validate($id_u)."'";
+    $zapytanie = "SELECT `id` FROM `servers` WHERE `id_unique` LIKE '".validate($id_u)."' ";
     $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
     if($query){
         $r = mysqli_fetch_array($query);
-        if(showWebsitesHostedOnServer($r['id']) == null){
-            $zapytanie = "DELETE FROM `servers` WHERE `servers`.`id_unique` LIKE '".validate($id_u)."'";
+        if(getWebsitesHostedOnServer($r['id']) == null){
+            $zapytanie = "DELETE FROM `servers` WHERE `servers`.`id_unique` LIKE '".validate($id_u)."' ";
             $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
             if($query){
-                @header("Location: servers.php");
                 showSuccess("Serwer został usunięty!");
+                return true;
             }else{
                 showError("Podczas usuwania serwera wystąpił błąd!");
             }
         }else{
-            showWarning("Nie udało się usunąć serwera z powodu podpiętych pod niego stron.<br>Zmień serwer w ustawieniach każdej z nich, a następnie spróbuj ponownie usunąć ten serwer.");
-            showWebsitesHostedOnServer($r['id']);
+            $websites = "";
+            $hosted_websites = getWebsitesHostedOnServer($r['id']);
+            foreach ($hosted_websites as $key => $value) {
+                $websites .= "<span class='label label-warning'>".$value."</span>";
+            }
+            showWarning("Nie udało się usunąć serwera z powodu podpiętych pod niego stron.<br>Zmień serwer w ustawieniach każdej z nich, a następnie spróbuj ponownie usunąć ten serwer.<hr>Aktualnie podpięte strony:<br>".$websites);
         }
     }else{
         showError("Wystąpił błąd podczas sprawdzania połączeń serwera ze stronami internetowymi!<br>Jeśli problem będzie się powtarzał, skontaktuj się z administratorem systemu!");
     }
+    return false;
 }
 
 /**
@@ -1077,25 +1180,76 @@ function getComputerServiceData(string $id_u){
  * Funkcja zwracajaca tablice zawierajaca dane serwera o podanym na wejsciu identyfikatorze.
  *
  * @param string $id - unikalny identyfikator lub identyfikator liczbowy serwera.
- * @version 1.0.0
+ * @version 1.0.2
  */
-function getServerData(string $id){
-    if(is_numeric($id))
-        $zapytanie = "SELECT * FROM `servers` WHERE `id` = ".validate($id)." LIMIT 1";
-    else
-        $zapytanie = "SELECT * FROM `servers` WHERE `id_unique` LIKE '".validate($id)."' LIMIT 1";
+function getServerData(string $id = null){
+    if($id){
+        if(is_numeric($id))
+            $zapytanie = "SELECT * FROM `servers` WHERE `id` = ".validate($id)." LIMIT 1";
+        else
+            $zapytanie = "SELECT * FROM `servers` WHERE `id_unique` LIKE '".validate($id)."' LIMIT 1";
 
+        $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+        if($query){
+            if(mysqli_num_rows($query)>0){
+                $r = mysqli_fetch_array($query);
+                return $r;
+            }else{
+                showWarning("Nie znaleziono serwera o podanym identyfikatorze!");
+            }
+        }else{
+            showError("Wystąpił błąd podczas ładowania danych!<br>Jeśli problem będzie się powtarzał, skontaktuj się z administratorem systemu.");
+        }
+    }
+    return false;
+}
+
+/**
+ * Funkcja zwracajaca tablice zawierajaca dane dostawcy uslug o podanym na wejsciu identyfikatorze.
+ *
+ * @param string $id - unikalny identyfikator liczbowy dostawcy uslug.
+ * @version 1.0.1
+ */
+function getProviderData(string $id = null){
+    if($id){
+        $zapytanie = "SELECT * FROM `providers` WHERE `id` = ".validate($id)." LIMIT 1";
+        $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+        if($query){
+            if(mysqli_num_rows($query)>0){
+                $r = mysqli_fetch_array($query);
+                return $r;
+            }else{
+                showWarning("Nie znaleziono dostawcy usług o podanym identyfikatorze!");
+            }
+        }else{
+            showError("Wystąpił błąd podczas ładowania danych!<br>Jeśli problem będzie się powtarzał, skontaktuj się z administratorem systemu.");
+        }
+    }
+    return false;
+}
+
+/**
+ * Funkcja zwracajaca liste stron, ktore sa utrzymywane na serwerze o podanym identyfikatorze.
+ * W przypadku braku stron powiazanych z serwerem na liscie pojawi sie jeden wpis - stosowny komunikat.
+ *
+ * @param integer $id - identyfikator serwera
+ * @version 1.0.3
+ */
+function getWebsitesHostedOnServer(int $id){
+    $zapytanie = "SELECT `name` FROM `websites` WHERE `id_server` = ".$id." AND `status` = 2";
     $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
     if($query){
         if(mysqli_num_rows($query)>0){
-            $r = mysqli_fetch_array($query);
-            return $r;
-        }else{
-            showWarning("Nie znaleziono serwera o podanym identyfikatorze!");
+            for($i=0; $i<mysqli_num_rows($query); $i++){
+                $r = mysqli_fetch_array($query);
+                $hosted_websites[] = $r['name'];
+            }
+            return $hosted_websites;
         }
     }else{
-        showError("Wystąpił błąd podczas ładowania danych!<br>Jeśli problem będzie się powtarzał, skontaktuj się z administratorem systemu.");
+        showError("Podczas ładowania danych wystąpił nieznany błąd!<br>Jeśli problem będzie się powtarzał częściej, skontaktuj się z administratorem systemu.");
     }
+    return false;
 }
 
 /**
@@ -1146,7 +1300,25 @@ function getLastClientId(){
         $r = mysqli_fetch_array($query);
         return $r['id'];
     }else{
-        showError("Nie udało się pobrać identyfikatora nowo dodanego klienta!");
+        showError("Nie udało się pobrać identyfikatora najnowszego klienta!");
+        return false;
+    }
+}
+
+/**
+ * Funkcja zwracajaca ID ostatniego dostawcy uslug w bazie lub falsz,
+ * jesli dostawca uslug nie istnieje.
+ *
+ * @version 1.0.0
+ */
+function getLastProviderId(){
+    $zapytanie = "SELECT `id` FROM `providers` ORDER BY `id` DESC LIMIT 1";
+    $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+    if($query){
+        $r = mysqli_fetch_array($query);
+        return $r['id'];
+    }else{
+        showError("Nie udało się pobrać identyfikatora najnowszego dostawcy usług!");
         return false;
     }
 }
@@ -1199,13 +1371,26 @@ function getUserLogin(string $id_u){
  * Nowe pozycje dodawac TYLKO na koncu tablicy.
  *
  * @param integer $number
- * @version 1.0.2
+ * @version 1.0.3
  */
 function getCmsName(int $number = null){
     $cms = [
-        "Nieznany", "Statyczny HTML (brak CMS)", "Indywidualny CMS", "Wordpress", "Joomla", "Drupal",
-        "Magento", "Blogger", "Shopify", "Bitrix", "TYPO3", "Squarespace", "PrestaShop",
-        "MyBB", "vBulletin", "phpBB"
+        /*0*/ "Nieznany",
+        /*1*/ "<i class='fa fa-html5'></i> Statyczny HTML (brak CMS)",
+        /*2*/ "Indywidualny CMS",
+        /*3*/ "<i class='fa fa-wordpress'></i> Wordpress",
+        /*4*/ "<i class='fa fa-joomla'></i> Joomla",
+        /*5*/ "<i class='fa fa-drupal'></i> Drupal",
+        /*6*/ "Magento",
+        /*7*/ "Blogger",
+        /*8*/ "Shopify",
+        /*9*/ "Bitrix",
+        /*10*/ "TYPO3",
+        /*11*/ "Squarespace",
+        /*12*/ "PrestaShop",
+        /*13*/ "MyBB",
+        /*14*/ "vBulletin",
+        /*15*/ "phpBB"
     ];
     if($number !== null){
         if(!empty($cms[$number]))
@@ -1220,15 +1405,15 @@ function getCmsName(int $number = null){
 /**
  * Funkcja zwraca nazwe statusu prac nad strona, ktora odpowiada przyporzadkowanemu numerowi.
  * W przypadku statusu o niezanym numerze, funkcja zwroci 'Nieznany'.
- * Jesli funkcja zostanie wywolana bez parametru, zwraca laczna ilosc staelementow tablicy.
+ * Jesli funkcja zostanie wywolana bez parametru, zwraca laczna ilosc elementow tablicy.
  *
- * @param integer $number
- * @version 1.0.1
+ * @param int $number
+ * @version 1.0.2
  */
 function getStatusName(int $number = null){
     $status = [
         /*0*/ "W trakcie produkcji",
-        /*1*/ "Ukończono (bez administrowania)",
+        /*1*/ "Ukończono",
         /*2*/ "Aktualnie administrowana",
         /*3*/ "Porzucono"
     ];
@@ -1296,15 +1481,15 @@ function getUserPermissionName(int $number = null){
  * Indeks tablicy odpowiada danemu identyfikatorowi serwera.
  *
  * @return array $servers
- * @version 1.0.0
+ * @version 1.0.1
  */
 function getServerList(){
-    $zapytanie = "SELECT `id`, `server_provider` FROM `servers` ";
+    $zapytanie = "SELECT `servers`.`id`, `providers`.`provider_name` FROM `servers` INNER JOIN `providers` ON `servers`.`id_server_provider` = `providers`.`id` ";
     $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
     if($query){
         for($i=0; $i<mysqli_num_rows($query); $i++){
             $r = mysqli_fetch_array($query);
-            $servers[$r['id']] = $r['server_provider'];
+            $servers[$r['id']] = $r['provider_name'];
         }
         return $servers;
     }else{
@@ -1701,9 +1886,10 @@ function showYearlyPaymentsChart(){
 
 /**
  * Funkcja wyswietalajaca tabele zlecen serwisu komputerowego.
- * Na poczatku tabeli pojawia sie aktualnie otwarte zlecenia.
+ * Na poczatku tabeli znajduja sie aktualnie otwarte zlecenia, dalej wszystkie zamkniete zlecenia
+ * posortowane po dacie przyjecia (od najnowszych do najstarszych).
  * 
- * @version 1.0.0
+ * @version 1.0.1
  */
 function showComputerServiceList(){
     $zapytanie = "SELECT `computer_service`.`id_unique`, `computer_service`.`date_start`, `computer_service`.`device`, `computer_service`.`status`, CONCAT(`clients`.`first_name`, ' ', `clients`.`second_name`) AS 'PERSON' FROM `computer_service` INNER JOIN `clients` ON `computer_service`.`id_client` = `clients`.`id` ORDER BY `computer_service`.`status`, `computer_service`.`date_start` DESC, `computer_service`.`id` DESC ";
@@ -1715,19 +1901,47 @@ function showComputerServiceList(){
                 <th><i class='fa fa-fw fa-calendar'></i> Data przyjęcia</th>
                 <th><i class='fa fa-fw fa-user'></i> Klient</th>
                 <th><i class='fa fa-fw fa-laptop'></i> Urządzenie</th>
+                <th style='width: 66px'></th>
                 <th></th>
             </tr>";
             for($i=0; $i<mysqli_num_rows($query); $i++) {
                 $r = mysqli_fetch_array($query);
-                if($r['status'] == 1)
+                if($r['status'] == 1){
                     $class = "default";
-                else
+                }else{
                     $class = "warning";
+                }
+
+                $icons = array_fill(0, 2, "<i class='fa fa-fw'></i>");
+                $path = "uploads/doc/computer_service/".$r['id_unique']."/";
+                if(is_dir($path)){
+                    $files = array_diff(scandir($path), array('.', '..'));
+                    foreach ($files as $key => $value) {
+                        $value = substr(strtolower($value), 0, -4);
+
+                        if(stripos($value, "podsumowanie pracy"))
+                            $icons[0] = "<i class='fa fa-fw fa-file-text-o' style='color: grey;'></i>";
+                        if(stripos($value, "raport sprzętowy"))
+                            $icons[1] = "<i class='fa fa-fw fa-microchip' style='color: grey;'></i>";
+                        if(file_exists("uploads/img/computer_service/".$r['id_unique']."/photo.jpg"))
+                            $icons[2] = "<i class='fa fa-fw fa-photo' style='color: grey;'></i>";
+                    }
+                }else{
+                    $icons[0] = "<span class='fa-stack'>
+                    <i class='fa fa-folder-open fa-stack-1x'></i>
+                    <i class='fa fa-ban fa-stack-2x text-danger'></i>
+                  </span>";
+                }
 
                 echo "<tr class='".$class."'>
                     <td>".$r['date_start']."</td>
                     <td>".$r['PERSON']."</td>
                     <td>".$r['device']."</td>
+                    <td>";
+                    foreach ($icons as $key => $value) {
+                        echo $value;
+                    }
+                    echo "</td>
                     <td><a href='computerServiceMore.php?id_u=".$r['id_unique']."' class='btn btn-".$class." btn-xs full-width'><i class='fa fa-arrow-right'></i></a></td>
                 </tr>";
             }
@@ -1746,18 +1960,18 @@ function showComputerServiceList(){
  * to serwer z podanym unikalnym identyfikatorem zostanie domyslnie wybrany.
  *
  * @param string $selected_id
- * @version 1.0.0
+ * @version 1.0.1
  */
 function showServersDopdown(string $selected_id = null){
-    $zapytanie = "SELECT `id`, `server_provider` FROM `servers`";
+    $zapytanie = "SELECT `servers`.`id`, `servers`.`name`, `providers`.`provider_name` FROM `servers` INNER JOIN `providers` ON `servers`.`id_server_provider` = `providers`.`id` ";
     $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
     if($query){
         echo "<optgroup label='Serwery:'>";
         while($r = mysqli_fetch_array($query)){
             if($selected_id && $r['id'] == $selected_id){
-                echo "<option value='".$r['id']."' selected>".$r['server_provider']."</option>";
+                echo "<option value='".$r['id']."' selected>".$r['name']." (".$r['provider_name'].")</option>";
             }else{
-                echo "<option value='".$r['id']."'>".$r['server_provider']."</option>";
+                echo "<option value='".$r['id']."'>".$r['name']." (".$r['provider_name'].")</option>";
             }
         }
         echo "</optgroup>";
@@ -1784,9 +1998,9 @@ function showClientsList(){
             for($i=0; $i<mysqli_num_rows($query); $i++) {
                 $r = mysqli_fetch_array($query);
                 $icons = "";
-                if($r['phone'])     $icons .= "<i class='fa fa-phone'></i> ";
-                if($r['email'])     $icons .= "<i class='fa fa-at'></i> ";
-                if($r['address'])   $icons .= "<i class='fa fa-home'></i> ";
+                if($r['phone'])     $icons .= "<i class='fa fa-phone' style='color: grey;'></i> ";
+                if($r['email'])     $icons .= "<i class='fa fa-at' style='color: grey;'></i> ";
+                if($r['address'])   $icons .= "<i class='fa fa-home' style='color: grey;'></i> ";
                 if($r['ILOSC_ZGLOSZEN'] >= 9) $icons .= "<img src='img/svg/number_nine_plus.svg' style='height: 16px; margin-bottom: 3px;'>";
                 elseif($r['ILOSC_ZGLOSZEN'] >= 5) $icons .= "<img src='img/svg/number_five.svg' style='height: 16px; margin-bottom: 3px;'>";
                 elseif($r['ILOSC_ZGLOSZEN'] >= 3) $icons .= "<img src='img/svg/number_three.svg' style='height: 16px; margin-bottom: 3px;'>";
@@ -1814,8 +2028,8 @@ function showClientsList(){
  * @param string $selected_id_u
  * @version 1.0.0
  */
-function showClientsDopdown(string $selected_id_u = null){
-    $zapytanie = "SELECT `id_unique`, CONCAT(`first_name`, ' ', `second_name`) AS 'KLIENT' FROM `clients` ";
+function showClientsDropdown(string $selected_id_u = null){
+    $zapytanie = "SELECT `id_unique`, CONCAT(`second_name`, ' ', `first_name`) AS 'KLIENT' FROM `clients` ORDER BY KLIENT ASC ";
     $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
     if($query){
         echo "<optgroup label='Klienci:'>";
@@ -1824,6 +2038,30 @@ function showClientsDopdown(string $selected_id_u = null){
                 echo "<option value='".$r['id_unique']."' selected>".$r['KLIENT']."</option>";
             }else{
                 echo "<option value='".$r['id_unique']."'>".$r['KLIENT']."</option>";
+            }
+        }
+        echo "</optgroup>";
+    }
+}
+
+/**
+ * Funkcja wyswietlajaca rozwijana liste dostawcow w systemie, umozliwiajac
+ * wybranie konkretnego dostawcy. Jesli podany zostal parametr 'selected_id_u',
+ * to dostawca z podanym unikalnym identyfikatorem zostanie domyslnie wybrany.
+ *
+ * @param string $selected_id
+ * @version 1.0.0
+ */
+function showProvidersDopdown(string $selected_id = null){
+    $zapytanie = "SELECT `id`, `provider_name` FROM `providers` ";
+    $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+    if($query){
+        echo "<optgroup label='Dostępni dostawcy:'>";
+        while($r = mysqli_fetch_array($query)){
+            if($selected_id && $r['id'] == $selected_id){
+                echo "<option value='".$r['id']."' selected>".$r['provider_name']."</option>";
+            }else{
+                echo "<option value='".$r['id']."'>".$r['provider_name']."</option>";
             }
         }
         echo "</optgroup>";
@@ -1859,13 +2097,13 @@ function showClientServiceRequests(int $id, int $count){
  * @param string $mode - tryb wyswietlania. Dostepne tryby: 'website' oraz 'computer_service'
  * @param integer $id - identyfikator strony lub serwisu komputerowego
  * @param bool $editable - czy funkcja ma wyswietlic przyciski pozwalajace na usuwanie wartosci z bazy
- * @version 1.0.0
+ * @version 1.0.1
  */
 function showConnectedPayments(string $mode, int $id, bool $editable = null){
     $mode = validate($mode);
     $id = validate($id);
     if($mode == "website" || $mode == "computer_service"){
-        $zapytanie = "SELECT * FROM `payments` WHERE `id_$mode`= $id";
+        $zapytanie = "SELECT * FROM `payments` WHERE `id_$mode`= $id ORDER BY `payment_date` ASC";
         $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
         if($query){
             $bilans = 0;
@@ -1894,48 +2132,51 @@ function showConnectedPayments(string $mode, int $id, bool $editable = null){
 
 /**
  * Funkcja wyswietlajaca log systemu.
- * @version 1.0.0
+ * @version 1.0.1
  */
 function showSiteLog(){
     $zapytanie = "SELECT * FROM `site_log` ORDER BY `site_log`.`time` DESC LIMIT 1000";
     $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
     if($query){
-            echo "<table class='table table-striped table-bordered table-condensed'>
-                    <tr>
-                     <th style='width: 80px'><i class='fa fa-fw fa-clock-o'></i> Czas</th>
-                     <th style='width: 80px'><i class='fa fa-fw fa-list'></i> Typ</th>
-                     <th><i class='fa fa-fw fa-exclamation-circle'></i> Zdarzenie</th>
-                    </tr>";
-            for ($i=0; $i<mysqli_num_rows($query); $i++){
-                $r = mysqli_fetch_array($query);
-                switch($r['type']){
-                    case 1:
-                        $class = "info";
-                        $type = "<span class='label label-info'>Informacja</label>";
-                        break;
-                    case 2:
-                        $class = "warning";
-                        $type = "<span class='label label-warning'>Ostrzeżenie</label>";
-                        break;
-                    case 3:
-                        $class = "danger";
-                        $type = "<span class='label label-danger'>Błąd</label>";
-                        break;
-                    default:
-                        $class = "";
-                        $type = "<span class='label label-default'>Nieznany</label>";
-                        break;
-                }
-                echo "<tr class='".$class."'>
-                        <td>".$r['time']."</td>
-                        <td>".$type."</td>
-                        <td>".bbCode($r['comment'])."</td>
-                    </tr>";
-                }
-            echo "</table>";
-        }else{
-            showError("Nie udało się pokazać logu strony...");
+        if(mysqli_num_rows($query) == 1000){
+            showWarning("W logu systemowym znajduje się więcej niż tysiąc wpisów!<br>Na stronie <b>wyświetlane jest ostatnie tysiąc zdarzeń</b>.");
         }
+        echo "<table class='table table-striped table-bordered table-condensed'>
+                <tr>
+                    <th style='width: 80px'><i class='fa fa-fw fa-clock-o'></i> Czas</th>
+                    <th style='width: 80px'><i class='fa fa-fw fa-list'></i> Typ</th>
+                    <th><i class='fa fa-fw fa-exclamation-circle'></i> Zdarzenie</th>
+                </tr>";
+        for ($i=0; $i<mysqli_num_rows($query); $i++){
+            $r = mysqli_fetch_array($query);
+            switch($r['type']){
+                case 1:
+                    $class = "info";
+                    $type = "<span class='label label-info'>Informacja</span>";
+                    break;
+                case 2:
+                    $class = "warning";
+                    $type = "<span class='label label-warning'>Ostrzeżenie</span>";
+                    break;
+                case 3:
+                    $class = "danger";
+                    $type = "<span class='label label-danger'>Błąd</span>";
+                    break;
+                default:
+                    $class = "";
+                    $type = "<span class='label label-default'>Nieznany</span>";
+                    break;
+            }
+            echo "<tr class='".$class."'>
+                    <td>".$r['time']."</td>
+                    <td>".$type."</td>
+                    <td>".bbCode($r['comment'])."</td>
+                </tr>";
+            }
+        echo "</table>";
+    }else{
+        showError("Nie udało się pokazać logu strony...");
+    }
 }
 
 /**
@@ -2008,27 +2249,63 @@ function showPricingList(bool $editable){
  *
  * @param string $path
  * @param bool $editable
- * @version 1.0.0
+ * @version 1.0.1
  */
 function showFiles(string $path, bool $editable = null){
     if(is_readable($path)){
         $linked_files = array_diff(scandir($path), array('.', '..'));
         if(!empty($linked_files)){
             echo "<ul class='list-group'>";
-            foreach($linked_files as $data)
+            foreach($linked_files as $key => $value){
+                if(!is_numeric(substr($value, 0, 3))){
+                    $class = "list-group-item-danger";
+                    echo "<li class='list-group-item list-group-item-warning'><b><i class='fa fa-exclamation-triangle'></i> UWAGA!</b><br>Plik <i>".$value."</i> nie posiada prawidłowej numeracji, co może skutkować problemami z zarządzaniem plikami! Zalecane jest ponowne wysłanie pliku na serwer lub ręczna edycja jego nazwy!</li>";
+                }else{
+                    $class = "";
+                }
+                switch (substr($value, strlen($value)-3, 3)) {
+                    case 'pdf':
+                        $icon = [
+                            "href" => "svg/pdf.svg",
+                            "alt" => "PDF"
+                        ];
+                        break;
+
+                    case 'iso':
+                        $icon = [
+                            "href" => "svg/iso.svg",
+                            "alt" => "ISO"
+                        ];
+                        break;
+
+                    case 'zip':
+                        $icon = [
+                            "href" => "svg/zip.svg",
+                            "alt" => "ZIP"
+                        ];
+                        break;
+                    
+                    default:
+                        $icon = [
+                            "href" => "svg/attachment.svg",
+                            "alt" => "unknwn"
+                        ];
+                        break;
+                }
                 if($editable){
-                    echo "<li class='list-group-item'>
-                            <a href='$path/$data' target='_blank'>
-                                <img src='img/svg/pdf.svg' class='icon-20px' alt='PDF' />
-                                $data
+                    echo "<li class='list-group-item $class'>
+                            <a href='$path/$value' target='_blank'>
+                                <img src='img/".$icon['href']."' class='icon-20px' alt='".$icon['alt']."' />
+                                $value
                             </a>
-                            <a href='?id_u=".$_GET['id_u']."&status=deleteDocument&name=".substr($data, 0, strpos($data, "."))."'>
+                            <a href='?id_u=".$_GET['id_u']."&status=deleteDocument&name=".substr($value, 0, strpos($value, "."))."'>
                                 <button class='btn btn-danger btn-xs pull-right'><i class='fa fa-trash'></i></button>
                             </a>";
                     echo "</li>";
                 }else{
-                    echo "<a href='".$path."/".$data."' target='_blank' class='list-group-item'><img src='img/svg/pdf.svg' class='icon-20px' alt='PDF' /> ".$data."</a>";
+                    echo "<a href='".$path."/".$value."' target='_blank' class='list-group-item  $class'><img src='img/".$icon['href']."' class='icon-20px' alt='".$icon['alt']."' /> ".$value."</a>";
                 }
+            }
             echo "</ul>";
         }else{
             showInfo("Brak plików.");
@@ -2042,7 +2319,7 @@ function showFiles(string $path, bool $editable = null){
  * Funkcja wyswietlajaca strony internetowe z danej kategorii, w zaleznosci od podanego trybu.
  *
  * @param string $mode - status strony (during_work, finished, administrate, dropped)
- * @version 1.0.1
+ * @version 1.0.3
  */
 function showWebsites(string $mode = null){
     if($mode == "during_work" || $mode == "finished" || $mode == "administrate" || $mode == "dropped"){
@@ -2060,20 +2337,36 @@ function showWebsites(string $mode = null){
                 $mode = 3;
                 break;
         }
-        $zapytanie = "SELECT `id`, `id_unique`, `name`, `web_address`, `server_provider`, `domain_provider`, `status`, `cms` FROM `websites` WHERE `status` = $mode ORDER BY `name`";
+        $zapytanie = "SELECT `id_unique`, `name`, `web_address`, `status`, `cms` FROM `websites` WHERE `status` = $mode ORDER BY `name`";
         $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
         if($query){
             if(mysqli_num_rows($query)>0){
                 for($i = 0; $i<mysqli_num_rows($query); $i++){
                     $r = mysqli_fetch_array($query);
                     $class = "default";
-                    $wordpress = null;
+                    $login_link_btn = null;
+
                     if($r['status'] == 0)
                         $class = "warning";
-                    if($r['cms'] == 2)
-                        $wordpress = "<a href='http://".$r['web_address']."/wp-admin' class='btn btn-info btn-xs pull-right' style='margin-right: 5px;' target='_blank'>
-                                        <i class='fa fa-wordpress'></i> <i class='fa fa-sign-in'></i>
-                                    </a>";
+                    if($r['cms'] !== null){
+                        switch ($r['cms']) {
+                            case 3:
+                                $login_link_btn = "<a href='http://".$r['web_address']."/wp-admin' class='btn btn-info btn-xs pull-right' style='margin-right: 5px;' target='_blank'>
+                                                        <i class='fa fa-wordpress'></i> <i class='fa fa-sign-in'></i>
+                                                    </a>";
+                                break;
+                            case 4:
+                                $login_link_btn = "<a href='http://".$r['web_address']."/administrator' class='btn btn-info btn-xs pull-right' style='margin-right: 5px;' target='_blank'>
+                                                        <i class='fa fa-joomla'></i> <i class='fa fa-sign-in'></i>
+                                                    </a>";
+                                break;
+                            case 5:
+                                $login_link_btn = "<a href='http://".$r['web_address']."/admin' class='btn btn-info btn-xs pull-right' style='margin-right: 5px;' target='_blank'>
+                                                        <i class='fa fa-drupal'></i> <i class='fa fa-sign-in'></i>
+                                                    </a>";
+                                break;
+                        }
+                    }
 
                     echo "<div class='alert-$class'>
                             <div class='media-left'>
@@ -2085,7 +2378,7 @@ function showWebsites(string $mode = null){
                                 <a href='websitesMore.php?id_u=".$r['id_unique']."'>
                                     <button class='btn btn-$class pull-right'>Więcej</button>
                                 </a>
-                                $wordpress
+                                $login_link_btn
                             </div>
                         </div>
                         <hr>";
@@ -2161,13 +2454,13 @@ function showWebsitesUpcomingPayments(){
 }
 
 /**
- * Funkcja wyswietlajaca liste serwerow wraz z stronami,
- * ktore sa pod nie podpiete (wymagana funkcja 'showWebsitesHostedOnServer()')
+ * Funkcja wyswietlajaca liste serwerow wraz ze stronami,
+ * ktore sa utrzymywane na danym serwerze (wymagana funkcja 'getWebsitesHostedOnServer()')
  *
- * @version 1.0.0
+ * @version 1.0.3
  */
 function showServers(){
-    $zapytanie = "SELECT *, DATEDIFF(`expires_date`, NOW()) AS POZOSTALO_DNI FROM `servers` ";
+    $zapytanie = "SELECT `servers`.*, DATEDIFF(`expires_date`, NOW()) AS 'POZOSTALO_DNI', `providers`.`provider_name` FROM `servers` INNER JOIN `providers` ON `servers`.`id_server_provider` = `providers`.`id` ORDER BY `expires_date` ASC ";
     $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
     if($query){
         if(mysqli_num_rows($query)>0){
@@ -2175,6 +2468,7 @@ function showServers(){
                     <table class='table table-condensed'>";
             for ($i=0; $i<mysqli_num_rows($query); $i++) {
                 $r = mysqli_fetch_array($query);
+                $hosted_websites = getWebsitesHostedOnServer($r['id']);
                 $type = $r['type'];
                 switch($type){
                     case 0:
@@ -2198,9 +2492,10 @@ function showServers(){
                 echo "<tr>
                         <th rowspan='3' class='th-centered'>
                             <img src='img/".$icon."' alt='".$type." icon' style='width: 64px; height='64px'>
-                            <br>".$type."
-                            <br>".$r['server_provider']."
-                        </th>
+                            <br>".$r['name']
+                            ."<br><i>".$type
+                            ."<br>".$r['provider_name']
+                        ."</i></th>
                         <td colspan='2'>
                             <a href='serversEdit.php?id_u=".$r['id_unique']."' class='btn btn-default btn-xs pull-right'><i class='fa fa-pencil-square-o'></i> Edytuj</a>
                         </td>
@@ -2210,8 +2505,15 @@ function showServers(){
                             <b>Data wygaśnięcia:</b>
                             <br>".$r['expires_date']." (pozostało ".$r['POZOSTALO_DNI']." dni)
                         </td>
-                        <td rowspan='2'>";
-                showWebsitesHostedOnServer($r['id']);
+                        <td rowspan='2'>
+                            <b>Lista stron powiązanych z tą usługą:</b><br>";
+                            if($hosted_websites){
+                                foreach ($hosted_websites as $key => $value) {
+                                    echo "<span class='label label-default'>".$value."</span> ";
+                                }
+                            }else{
+                                echo "<span class='label label-default'><i>Brak stron internetowych powiązanych z tą usługą</i></span>";
+                            }
                 echo "</td>
                     </tr>
                     <tr>
@@ -2278,35 +2580,6 @@ function showTransactions(int $count){
         }
     }else{
         showError("Funkcja przekracza maksymalną ilość transakcji do zwrócenia (maksymalnie 1000 wyników)! Zmień wartość, a następnie wywołaj funkcję jeszcze raz!");
-    }
-}
-
-/**
- * Funkcja wyswietlajaca liste stron, ktore sa utrzymywane na serwerze o podanym identyfikatorze.
- * W przypadku braku stron powiazanych z serwerem na liscie pojawi sie jeden wpis - stosowny komunikat.
- *
- * @param integer $id - identyfikator serwera
- * @version 1.0.0
- */
-function showWebsitesHostedOnServer(int $id){
-    $zapytanie = "SELECT `id_unique`, `name`, `web_address`, `status` FROM `websites` WHERE `server_provider` = ".$id." AND (`status` = 0 OR `status` = 2) ";
-    $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
-    if($query){
-        echo "<b>Strony utrzymywane na tym serwerze:</b><br>";
-        if(mysqli_num_rows($query)>0){
-            for($i=0; $i<mysqli_num_rows($query); $i++){
-                $r = mysqli_fetch_array($query);
-                if($r['status'] == 0)
-                    $class = "label-warning";
-                else
-                    $class = "label-default";
-                echo "<span class='label $class'>".$r['name']."</span> ";
-            }
-        }else{
-            echo "<span class='label label-info'>Brak stron internetowych powiązanych z tą usługą</span>";
-        }
-    }else{
-        showError("Podczas ładowania danych wystąpił nieznany błąd!<br>Jeśli problem będzie się powtarzał częściej, skontaktuj się z administratorem systemu.");
     }
 }
 
@@ -2581,24 +2854,50 @@ function checkComputerService(){
  * Funkcja sprawdza, czy nie zbliza sie termin oplaty za serwer,
  * a w razie platnosci w terminie mniejszym niz miesiac wyswietla odpowiedni komunikat.
  * 
- * @version 1.0.0
+ * @version 1.0.1
  */
 function checkServersExpire(){
-    $zapytanie = "SELECT `server_provider`, `expires_date`, datediff(`expires_date`, CURDATE()) AS roznica FROM `servers` WHERE `expires_date` IS NOT NULL ";
+    $zapytanie = "SELECT `providers`.`provider_name`, `expires_date`, datediff(`expires_date`, CURDATE()) AS 'ROZNICA' FROM `servers` INNER JOIN `providers` ON `servers`.`id_server_provider` = `providers`.`id` WHERE `expires_date` IS NOT NULL AND datediff(`expires_date`, CURDATE()) < 31 ORDER BY datediff(`expires_date`, CURDATE()) ASC ";
     $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
     if($query){
         $ile = mysqli_num_rows($query);
         for($i=0; $i<$ile; $i++){
             $r = mysqli_fetch_array($query);
-            if($r['roznica'] < 0)
-                showError(abs($r['roznica'])." dni temu <b>wygasła usługa hostingu lub serwera</b>! (<b>".$r['server_provider']."</b>)<br>Jeśli usługa nie będzie odnawiana, usuń ją.");
-            elseif($r['roznica'] < 7)
-                showError("Pozostało mniej niż tydzień (".$r['roznica']." dni) do wygaśnięcia usługi serwera lub hostingu! (<b>".$r['server_provider']."</b>)<br><a href='servers.php' class='alert-link'>Przejdź do panelu zarządzania serwerami</a>");
-            elseif($r['roznica'] < 31)
-                showWarning("Pozostało mniej niż miesiąc (".$r['roznica']." dni) do wygaśnięcia usługi serwera lub hostingu! (<b>".$r['server_provider']."</b>)<br><a href='servers.php' class='alert-link'>Przejdź do panelu zarządzania serwerami</a>");
+            if($r['ROZNICA'] < 0)
+                showError(abs($r['ROZNICA'])." dni temu <b>wygasła usługa hostingu lub serwera</b>! (<b>".$r['provider_name']."</b>)<br>Jeśli usługa nie będzie odnawiana, usuń ją.");
+            elseif($r['ROZNICA'] < 7)
+                showError("Pozostało mniej niż tydzień (".$r['ROZNICA']." dni) do wygaśnięcia usługi serwera lub hostingu! (<b>".$r['provider_name']."</b>)<br><a href='servers.php' class='alert-link'>Przejdź do panelu zarządzania serwerami</a>");
+            elseif($r['ROZNICA'] < 31)
+                showWarning("Pozostało mniej niż miesiąc (".$r['ROZNICA']." dni) do wygaśnięcia usługi serwera lub hostingu! (<b>".$r['provider_name']."</b>)<br><a href='servers.php' class='alert-link'>Przejdź do panelu zarządzania serwerami</a>");
         }
     }else{
         showError("Nie udało się załadować danych serwerów!");
+    }
+}
+
+/**
+ * Funkcja sprawdza, czy nie zbliza sie termin wygasniecia certyfikatu SSL,
+ * a w razie terminu mniejszego niz miesiac wyswietla odpowiedni komunikat.
+ * 
+ * @version 1.0.0
+ */
+function checkSSLExpire(){
+    $zapytanie = "SELECT `id_unique`, `name`, `ssl_expire_date`, datediff(`ssl_expire_date`, CURDATE()) AS 'ROZNICA' FROM `websites` WHERE `ssl_expire_date` IS NOT NULL AND datediff(`ssl_expire_date`, CURDATE()) < 31 ORDER BY datediff(`ssl_expire_date`, CURDATE()) ASC ";
+    $query = mysqli_query($GLOBALS['polaczenie'], $zapytanie);
+    if($query){
+        for($i = 0; $i < mysqli_num_rows($query); $i++){
+            $r = mysqli_fetch_array($query);
+            if($r['ROZNICA']<0)
+                showError(abs($r['ROZNICA'])." dni temu <b>wygasł certyfikat SSL</b> dla strony '<b>".$r['name']."</b>'!");
+            elseif($r['ROZNICA']<=7)
+                showError("Pozostało ".$r['ROZNICA']." dni do wygaśnięcia <b>certyfikatu SSL</b> na stronie '<b>".$r['name']."</b>'! (certyfikat wygasa ".$r['ssl_expire_date'].")<br>Za ".$r['ROZNICA']." dni <b>certyfikat zostanie anulowany</b>, a bezpieczeństwo strony drastycznie zmaleje!<br><a href='websitesMore.php?id_u=".$r['id_unique']."' class='alert-link'>Przejdź do ustawień strony</a>");
+            elseif($r['ROZNICA']<=14)
+                showWarning("Pozostało ".$r['ROZNICA']." dni do wygaśnięcia <b>certyfikatu SSL</b> na stronie '<b>".$r['name']."</b>'! (certyfikat wygasa ".$r['ssl_expire_date'].")<br><a href='websitesMore.php?id_u=".$r['id_unique']."' class='alert-link'>Przejdź do ustawień strony</a>");
+            elseif($r['ROZNICA']<=30)
+                showInfo("Pozostało mniej niż miesiąc (".$r['ROZNICA']." dni) do wygaśnięcia <b>certyfikatu SSL</b> na stronie '<b>".$r['name']."</b>'! (certyfikat wygasa ".$r['ssl_expire_date'].")");
+        }
+    }else{
+        showError("Nie udało się załadować danych stron internetowych!");
     }
 }
 

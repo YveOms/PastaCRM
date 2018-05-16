@@ -61,11 +61,23 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                         </tr>
                         <tr>
                             <th><i class='fa fa-fw fa-phone'></i> Telefon kontaktowy</th>
-                            <td><a href="tel:<?= $client_data['phone'] ?>"><?= $client_data['phone'] ?></a></td>
+                            <td>
+                                <?php
+                                    if($client_data['phone'] != null) {
+                                        echo $client_data['phone']."<a href='tel:".$client_data['phone']."' class='btn btn-success btn-xs pull-right'><i class='fa fa-phone'></i> Zadzwoń</a>";
+                                    }
+                                ?>
+                            </td>
                         </tr>
                         <tr>
                             <th><i class='fa fa-fw fa-at'></i> Adres email</th>
-                            <td><a href="mailto:<?= $client_data['email'] ?>"><?= $client_data['email'] ?></a></td>
+                            <td>
+                                <?php
+                                    if($client_data['email'] != null) {
+                                        echo $client_data['email']."<a href='mailto:".$client_data['email']."' class='btn btn-success btn-xs pull-right'><i class='fa fa-envelope'></i> Napisz</a>";
+                                    }
+                                ?>
+                            </td>
                         </tr>
                         <tr>
                             <th><i class='fa fa-fw fa-home'></i> Adres zamieszkania</th>

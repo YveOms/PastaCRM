@@ -38,7 +38,7 @@ if(checkUserPermissions(3)){
                 <div class="row">
                     <div class="col-md-8">
                         <div class="panel panel-default">
-                            <div class="panel-heading"><i class="fa fa-book"></i> PastaMedia CMS Log</div>
+                            <div class="panel-heading"><i class="fa fa-book"></i> PastaCRM Log</div>
                             <div class="panel-body">
                                <?php
                                     showSiteLog();
@@ -52,7 +52,7 @@ if(checkUserPermissions(3)){
                             <div class="panel-body">
                                 <img src="img/site_log.png" alt="Site Log Comics" class="full-width">
                                 <hr>
-                                <a href="CHANGELOG" class="btn btn-primary full-width" target="_blank">Otwórz changelog PastaCMS</a>
+                                <a href="CHANGELOG" class="btn btn-primary full-width" target="_blank">Otwórz changelog PastaCRM</a>
                                 <hr>
                                 <p>
                                     <b>Co mogę zobaczyć w logu?</b>

@@ -47,8 +47,13 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                     if($id_u){
                         $website_data = getWebsiteData($id_u);
                         if($website_data != null){
+
                             $client_data = getClientData($website_data['id_contact_person']);
-                            $server_data = getServerData($website_data['server_provider']);
+                            $server_data = getServerData($website_data['id_server']);
+
+                            $server_provider = getProviderData($server_data['id_server_provider']);
+                            $domain_provider = getProviderData($website_data['id_domain_provider']);
+                            $ssl_provider = getProviderData($website_data['id_ssl_provider']);
                 ?>
                     <table class="table table-bordered table-striped">
                         <tr>
@@ -64,14 +69,25 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                             <td colspan="2"><a href="http://<?= $website_data['web_address']; ?>" target="_blank"><?= $website_data['web_address']; ?></a></td>
                         </tr>
                         <tr>
-                            <th><i class="fa fa-server"></i> Dostawca serwera</th>
-                            <td><?= $server_data['server_provider']; ?></td>
+                            <th><i class="fa fa-server"></i> Serwer</th>
+                            <td>
+                                <?php
+                                    if($server_data['name']){
+                                        echo $server_data['name']." (".$server_provider['provider_name'].")";
+                                    }
+                                ?>
+                                </td>
                             <td><?= $server_data['expires_date']; ?></td>
                         </tr>
                         <tr>
                             <th><i class="fa fa-database"></i> Dostawca domeny</th>
-                            <td><?= $website_data['domain_provider']; ?></td>
+                            <td><?= $domain_provider['provider_name']; ?></td>
                             <td><?= $website_data['domain_expire_date']; ?></td>
+                        </tr>
+                        <tr>
+                            <th><i class="fa fa-lock"></i> Dostawca SSL</th>
+                            <td><?= $ssl_provider['provider_name']; ?></td>
+                            <td><?= $website_data['ssl_expire_date']; ?></td>
                         </tr>
                         <tr>
                             <th><i class="fa fa-money"></i> Roczna płatność</th>
@@ -112,11 +128,23 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                         </tr>
                         <tr>
                             <th><i class="fa fa-at"></i> Adres email</th>
-                            <td><a href='mailto:<?= $client_data['email']; ?>'><?= $client_data['email']; ?></a></td>
+                            <td>
+                                <?php
+                                    if($client_data['email'] != null) {
+                                        echo $client_data['email']."<a href='mailto:".$client_data['email']."' class='btn btn-success btn-xs pull-right'><i class='fa fa-envelope'></i> Napisz</a>";
+                                    }
+                                ?>
+                            </td>
                         </tr>
                         <tr>
                             <th><i class="fa fa-phone"></i> Telefon</th>
-                            <td><a href="tel:<?= $client_data['phone']; ?>"><?= $client_data['phone']; ?></a></td>
+                            <td>
+                                <?php
+                                    if($client_data['phone'] != null) {
+                                        echo $client_data['phone']."<a href='tel:".$client_data['phone']."' class='btn btn-success btn-xs pull-right'><i class='fa fa-phone'></i> Zadzwoń</a>";
+                                    }
+                                ?>
+                            </td>
                         </tr>
                     </table>
 
@@ -130,15 +158,27 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                         </tr>
                         <tr>
                             <th style="width: 40%"><i class="fa fa-user"></i> Imię i nazwisko</th>
-                            <td><?= $client_data['first_name']; ?> <?= $client_data['second_name']; ?></td>
+                            <td><a href="clientsMore.php?id_u=<?= $client_data['id_unique']; ?>"><?= $client_data['first_name']; ?> <?= $client_data['second_name']; ?></a></td>
                         </tr>
                         <tr>
                             <th><i class="fa fa-at"></i> Adres email</th>
-                            <td><a href='mailto:<?= $client_data['email']; ?>'><?= $client_data['email']; ?></a></td>
+                            <td>
+                                <?php
+                                    if($client_data['email'] != null) {
+                                        echo $client_data['email']."<a href='mailto:".$client_data['email']."' class='btn btn-success btn-xs pull-right'><i class='fa fa-envelope'></i> Napisz</a>";
+                                    }
+                                ?>
+                            </td>
                         </tr>
                         <tr>
                             <th><i class="fa fa-phone"></i> Telefon</th>
-                            <td><a href="tel:<?= $client_data['phone']; ?>"><?= $client_data['phone']; ?></a></td>
+                            <td>
+                                <?php
+                                    if($client_data['phone'] != null) {
+                                        echo $client_data['phone']."<a href='tel:".$client_data['phone']."' class='btn btn-success btn-xs pull-right'><i class='fa fa-phone'></i> Zadzwoń</a>";
+                                    }
+                                ?>
+                            </td>
                         </tr>
                     </table>
                     <?php

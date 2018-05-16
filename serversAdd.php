@@ -46,12 +46,21 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                 <?php
                                     if(isset($_POST['add_server'])){
                                         $server_data = [
-                                            "server_provider" => $_POST['server_provider'],
+                                            "id_server_provider" => null,
+                                            "server_name" => $_POST['server_name'],
                                             "expires_date" => $_POST['expires_date'],
                                             "type" => $_POST['type'],
                                             "comment" => $_POST['comment']
                                         ];
 
+                                        if(isset($_POST['new_provider_name'])){
+                                            if(addProvider($_POST['new_provider_name'])){
+                                                $server_data['id_server_provider'] = getLastProviderId();
+                                            }
+                                        }else{
+                                            $server_data['id_server_provider'] = $_POST['id_server_provider'];
+                                        }
+                                        
                                         addServer($server_data);
                                     }
 
@@ -60,32 +69,47 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                         $type_list .= "<option value='$i'>".getServerTypeName($i)."</option>";
                                     }
                                 ?>
-                                    <form method="post">
-                                        <div class="form-group">
-                                            <label>Dostawca serwera: <font color="red">*</font></label>
-                                            <input type="text" class="form-control" name="server_provider" maxlength="100" required />
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Typ usługi: <font color="red">*</font></label>
-                                            <select class="form-control" name="type">
-                                                <option value="x">- - - - -</option>
-                                                <?= $type_list ?>
+                                <form method="POST">
+                                <div class="form-group" id="provider_input">
+                                        <label>Dostawca serwera <font color="red">*</font></label>
+                                        <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                                            <div class="input-group-addon"><i class="fa fa-fw fa-address-card"></i></div>
+                                            <select class="selectpicker form-control" name="id_server_provider" data-live-search="true">
+                                                <option value="">- - -</option>
+                                                <?php
+                                                    showProvidersDopdown();
+                                                ?>
                                             </select>
+                                            <span class="input-group-btn">
+                                                <button class="btn btn-default" type="button" onclick="showAddNewProviderForm('provider_input')"><i class="fa fa-fw fa-plus"></i> Dodaj nowego dostawcę</button>
+                                            </span>
                                         </div>
-                                        <div class="form-group">
-                                            <label>Data wygaśnięcia: <font color="red">*</font></label>
-                                            <input type="date" class="form-control" name="expires_date" maxlength="10" required autocomplete="off" placeholder="YYYY-MM-DD" />
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Opis:</label>
-                                            <textarea class="form-control" name="comment" maxlength="255"></textarea>
-                                            <font color="grey">
-                                                Dostępne znaczniki BB-Code: [hr], [b], [i], [u], [s], [center], [code], [color=red], [img] <i>link</i> [/img], [a] <i>link</i> [/a]
-                                            </font>
-                                        </div>
-                                        <a href="servers.php" class="btn btn-primary"><i class="fa fa-arrow-left"></i> Wróć</a>
-                                        <button type="submit" class="btn btn-success" name="add_server"><i class="fa fa-plus"></i> Dodaj nowy serwer</button>
-                                    </form>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Nazwa serwera: <font color="red">*</font></label>
+                                        <input type="text" class="form-control" name="server_name" minlength="4" maxlength="100" onkeyup="checkInputLength(this, 4, 100, true)" required />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Typ usługi: <font color="red">*</font></label>
+                                        <select class="form-control" name="type">
+                                            <option value="x">- - - - -</option>
+                                            <?= $type_list ?>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Data wygaśnięcia: <font color="red">*</font></label>
+                                        <input type="date" class="form-control" name="expires_date" maxlength="10" required autocomplete="off" placeholder="YYYY-MM-DD" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Opis:</label>
+                                        <textarea class="form-control" name="comment" maxlength="255"></textarea>
+                                        <font color="grey">
+                                            Dostępne znaczniki BB-Code: [hr], [b], [i], [u], [s], [center], [code], [color=red], [img] <i>link</i> [/img], [a] <i>link</i> [/a]
+                                        </font>
+                                    </div>
+                                    <a href="servers.php" class="btn btn-primary"><i class="fa fa-arrow-left"></i> Wróć</a>
+                                    <button type="submit" class="btn btn-success" name="add_server"><i class="fa fa-plus"></i> Dodaj nowy serwer</button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -100,6 +124,10 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                 <p>
                                     <b>Dostawca serwera</b>
                                     <br>Firma zapewniająca VPS lub hosting, np. ProSerwer lub Home.pl
+                                </p>
+                                <p>
+                                    <b>Nazwa serwera</b>
+                                    <br>Nazwa własna dla serwera, np. 'Serwer #1' lub 'Główny Serwer Produkcyjny'
                                 </p>
                                 <p>
                                     <b>Typ usługi</b>
