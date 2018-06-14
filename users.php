@@ -1,7 +1,16 @@
 <?php
+/**
+ * Plik zawierajacy podstawowy widok uzytkownikow zarejestrowanych w systemie.
+ * 
+ * @category Components
+ * @package  PastaCRM
+ * @author   Patryk Szulc <patryk-szulc@outlook.com>
+ * @license  CC BY-NC-ND 4.0 https://creativecommons.org/licenses/by-nc-nd/4.0/
+ * @link     https://github.com/psc1997/PastaCRM
+ */
 @session_start();
-require_once("inc/functions.php");
-if(checkUserPermissions(3)){
+require_once "inc/functions.php";
+if (checkUserPermissions(3)) {
     $siteTitle = "Użytkownicy";
     @$id_u = $_GET['id_u'];
     @$status = $_GET['status'];
@@ -9,12 +18,12 @@ if(checkUserPermissions(3)){
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= showSiteTitle($siteTitle) ?></title>
-    <?php include_once("inc/head.php"); ?>
+    <title><?php echo getSiteTitle($siteTitle) ?></title>
+    <?php include_once "inc/head.php"; ?>
 </head>
 <body>
     <div id="wrapper">
-        <?php include_once("inc/menus.php"); ?>
+        <?php include_once "inc/menu.php"; ?>
         <div id="page-wrapper">
             <div class="container-fluid">
 
@@ -22,7 +31,7 @@ if(checkUserPermissions(3)){
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">
-                            <?= $siteTitle ?>
+                            <?php echo $siteTitle ?>
                             <small></small>
                         </h1>
                         <ol class="breadcrumb">
@@ -30,7 +39,7 @@ if(checkUserPermissions(3)){
                                 <i class="fa fa-dashboard"></i> <a href="dashboard.php">Dashboard</a>
                             </li>
                             <li class="active">
-                                <i class="fa fa-users"></i> <?= $siteTitle ?>
+                                <i class="fa fa-users"></i> <?php echo $siteTitle ?>
                             </li>
                         </ol>
                     </div>
@@ -44,23 +53,23 @@ if(checkUserPermissions(3)){
                             <div class="panel-heading"><i class="fa fa-users"></i> Lista użytkowników systemu</div>
                             <div class="panel-body">
                                 <?php
-                                    if($status == "deleteUser" && $_GET['id'] != null)
-                                        deleteUser($_GET['id']);
+                                if ($status == "deleteUser" && $_GET['id'] != null)
+                                    deleteUser($_GET['id']);
 
-                                    if(isset($_POST['add_user'])){
-                                        $user_data = [
-                                            "login" => $_POST['login'],
-                                            "passwd" => $_POST['passwd'],
-                                            "permissions_level" => $_POST['permissions_level']
-                                        ];
-                                        addUser($user_data);
-                                    }
+                                if (isset($_POST['add_user'])) {
+                                    $user_data = [
+                                        "login" => $_POST['login'],
+                                        "passwd" => $_POST['passwd'],
+                                        "permissions_level" => $_POST['permissions_level']
+                                    ];
+                                    addUser($user_data);
+                                }
 
-                                    $permissions_list = "";
-                                    for($i=0; $i<getUserPermissionName(); $i++)
-                                        $permissions_list .= "<option value='$i'>".getUserPermissionName($i)."</option>";
+                                $permissions_list = "";
+                                for ($i=0; $i<getUserPermissionName(); $i++)
+                                    $permissions_list .= "<option value='$i'>".getUserPermissionName($i)."</option>";
 
-                                    showUsers();
+                                showUsers();
                                 ?>
                             </div>
                         </div>
@@ -87,7 +96,7 @@ if(checkUserPermissions(3)){
                                         <label>Poziom uprawnień<font color="red">*</font></label>
                                         <select class="selectpicker" name="permissions_level" data-width="100%">
                                             <option value="x">- - -</option>
-                                            <?= $permissions_list ?>
+                                            <?php echo $permissions_list ?>
                                         </select>
                                     </div>
                                     <button type="submit" name="add_user" class="btn btn-success"> <i class="fa fa-plus"></i> Dodaj nowego użytkownika</button>

@@ -11,7 +11,8 @@
 <p>
     Application works perfectly, but there's some things to do:
     <ul>
-        <li><s>add editing options to pricing list</s> (done 04-04-2018),</li>
+        <li><s>add editing options to pricing list</s> (done 04.04.2018),</li>
+        <li><s>implementation of PSR standards and JavaScript Standard Style, started using Composer and Semantic Versioning</s> (done 14.06.2018),</li>
         <li>migrate from functions to object oriented programming (OOP).</li>
     </ul>
 </p>

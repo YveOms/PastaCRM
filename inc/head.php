@@ -1,3 +1,15 @@
+<?php
+/**
+ * Plik zawierajacy naglowek kazdej strony.
+ * 
+ * @category Components
+ * @package  PastaCRM
+ * @author   Patryk Szulc <patryk-szulc@outlook.com>
+ * @license  CC BY-NC-ND 4.0 https://creativecommons.org/licenses/by-nc-nd/4.0/
+ * @link     https://github.com/psc1997/PastaCRM
+ */
+require_once "config.php";
+?>
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,32 +19,33 @@
 
 <!-- # CSS -->
 <!-- Bootstrap Core -->
-<link href="css/bootstrap.min.css" rel="stylesheet">
+<link href="<?php echo WEB_ADDRESS ?>vendor/twbs/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <!-- Bootstrap Select -->
-<link href="css/bootstrap-select.min.css" rel="stylesheet">
+<link href="<?php echo WEB_ADDRESS ?>vendor/bootstrap-select/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet">
 
 <!-- Custom CSS -->
 <link href="css/sb-admin.css" rel="stylesheet">
+<link href="css/style.css" rel="stylesheet">
 
 <!-- Custom Fonts -->
-<link href="fonts/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+<link href="<?php echo WEB_ADDRESS ?>vendor/fortawesome/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 
 <!-- # JavaScript -->
 <!-- jQuery -->
-<script src="js/jquery.min.js"></script>
+<script src="<?php echo WEB_ADDRESS ?>vendor/components/jquery/jquery.min.js"></script>
 
 <!-- Functions -->
-<script src="inc/functions.js"></script>
+<script src="js/functions.js"></script>
 
 <!-- Bootstrap Core -->
-<script src="js/bootstrap.min.js"></script>
+<script src="<?php echo WEB_ADDRESS ?>vendor/twbs/bootstrap/dist/js/bootstrap.min.js"></script>
 
 <!-- Bootstrap Select -->
-<script src="js/bootstrap-select.min.js"></script>
+<script src="<?php echo WEB_ADDRESS ?>vendor/bootstrap-select/bootstrap-select/js/bootstrap-select.js"></script>
 
 <!-- Chart.js -->
-<script src="js/chart.min.js"></script>
+<script src="<?php echo WEB_ADDRESS ?>vendor/nnnick/chartjs/dist/Chart.min.js"></script>
 
 <!-- # Other -->
 <!-- Android Chrome Navibar Color -->

@@ -1,14 +1,23 @@
 <?php
+/**
+ * Plik zawierajacy widok pomocy.
+ * 
+ * @category Components
+ * @package  PastaCRM
+ * @author   Patryk Szulc <patryk-szulc@outlook.com>
+ * @license  CC BY-NC-ND 4.0 https://creativecommons.org/licenses/by-nc-nd/4.0/
+ * @link     https://github.com/psc1997/PastaCRM
+ */
 @session_start();
-require_once("inc/functions.php");
-if(checkUserPermissions(1) || checkUserPermissions(2) ||checkUserPermissions(3)){
+require_once "inc/functions.php";
+if (checkUserPermissions(1) || checkUserPermissions(2) ||checkUserPermissions(3)) {
     $siteTitle = "Pomoc";
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= showSiteTitle($siteTitle) ?></title>
-    <?php include_once("inc/head.php"); ?>
+    <title><?php echo getSiteTitle($siteTitle) ?></title>
+    <?php include_once "inc/head.php"; ?>
 
     <style>
         div.panel li.bold{
@@ -24,7 +33,7 @@ if(checkUserPermissions(1) || checkUserPermissions(2) ||checkUserPermissions(3))
 </head>
 <body>
     <div id="wrapper">
-        <?php include_once("inc/menus.php"); ?>
+        <?php include_once "inc/menu.php"; ?>
         <div id="page-wrapper">
             <div class="container-fluid">
 
@@ -32,7 +41,7 @@ if(checkUserPermissions(1) || checkUserPermissions(2) ||checkUserPermissions(3))
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">
-                            <?= $siteTitle ?>
+                            <?php echo $siteTitle ?>
                             <small>Just small tips and hints</small>
                         </h1>
                         <ol class="breadcrumb">
@@ -40,7 +49,7 @@ if(checkUserPermissions(1) || checkUserPermissions(2) ||checkUserPermissions(3))
                                 <i class="fa fa-dashboard"></i>  <a href="dashboard.php">Dashboard</a>
                             </li>
                             <li class="active">
-                                <i class="fa fa-question"></i> <?= $siteTitle ?>
+                                <i class="fa fa-question"></i> <?php echo $siteTitle ?>
                             </li>
                         </ol>
                     </div>
@@ -145,6 +154,48 @@ if(checkUserPermissions(1) || checkUserPermissions(2) ||checkUserPermissions(3))
                     <div class="panel-footer"><i>Ostatnia aktualizacja: 17-03-2018</i></div>
                 </div>
             </div>
+
+            <!-- Manualne generowanie certyfikatu SSL Let's Encrypt dla domeny -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapse_7596882225">
+                        <b>Manualne generowanie certyfikatu SSL Let's Encrypt dla domeny</b>
+                        <span class="label label-primary pull-right">Procedura</span>
+                    </a>
+                </div>
+                <div id="collapse_7596882225" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <p>
+                            Opis manualnego wygenerowania <b>darmowego certyfikatu SSL Let's Encrypt</b> dla danej domeny.
+                            <br>Wymagane narzędzia:
+                        </p>
+                        <ul>
+                            <li>specjalny dedykowany skrypt lokalny <i>Get HTTPS for free</i></li>
+                            <li>dostęp do konsoli systemu Linux z zainstalowanym modułem</li>
+                            <li>klucz prywatny konta Let's Encrypt (<a href="#" onclick="alert('Generowanie klucza za pomoca konsoli Linux:\nopenssl genrsa 4096 > account.key\n\nWyświetlenie klucza:\nopenssl rsa -in account.key -pubout');">jak wygenerować klucz</a>?)</li>
+                        </ul>
+                        <p>
+                            Opis krok po kroku:
+                        </p>
+                        <ol>
+                            <li>
+                                Wpisz adres email oraz własny publiczny klucz RSA wyciągnięty z pliku <i>account.key</i>.
+                                <figure>
+                                    <img src="img/help/LetsEncryptSSL1.png" alt="GUI" class="img-thumbnail">
+                                </figure>
+                            </li>
+                            <li>
+                                W kroku drugim kliknij przycisk <span class="label label-default">Generate CSR</span> a następnie wpisz nazwę domeny w wyskakujące okna według określonych zasad.
+                                <figure>
+                                    <img src="img/help/LetsEncryptSSL2.png" alt="GUI" class="img-thumbnail">
+                                </figure>
+                                Skopiuj otrzymaną komendę, wklej ją do konsoli Linux oraz wykonaj (upewnij się, że wykonujesz komendę w katalogu z kluczami).
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="panel-footer"><i>Ostatnia aktualizacja: xx-xx-xxxx</i></div>
+                </div>
+            </div>
             
         </div>
         <!-- KONIEC PROCEDUR -->
@@ -158,7 +209,7 @@ if(checkUserPermissions(1) || checkUserPermissions(2) ||checkUserPermissions(3))
 
         <h3>WebDev - Uruchamianie stron, migracja, konfiguracja Wordpress, itd...</h3>
 
-        <!-- Przyspieszenie Wordpress'a -->
+        <!-- Konfiguracja pliku htaccess -->
         <div class="panel panel-default">
             <div class="panel-heading">
                 <a data-toggle="collapse" data-parent="#accordion" href="#collapse_6639328394">
@@ -192,10 +243,11 @@ ExpiresByType image/jpg "access plus 1 year"
 ExpiresByType image/jpeg "access plus 1 year"
 ExpiresByType image/gif "access plus 1 year"
 ExpiresByType image/png "access plus 1 year"
-ExpiresByType text/css "access plus 1 month"
-ExpiresByType application/pdf "access plus 1 month"
-ExpiresByType text/x-javascript "access plus 1 month"
+ExpiresByType image/svg+xml "access plus 1 year"
 ExpiresByType image/x-icon "access plus 1 year"
+ExpiresByType text/css "access plus 1 month"
+ExpiresByType text/x-javascript "access plus 1 month"
+ExpiresByType application/pdf "access plus 1 month"
 ExpiresDefault "access plus 2 days"
 &lt;/IfModule>
 
@@ -219,7 +271,7 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </code>
 </pre>
                 </div>
-                <div class="panel-footer"><i>Ostatnia aktualizacja: 25-04-2018</i></div>
+                <div class="panel-footer"><i>Ostatnia aktualizacja: 31-05-2018</i></div>
             </div>
         </div>
         
@@ -281,6 +333,75 @@ SetOutputFilter DEFLATE
                     </ol>
                 </div>
                 <div class="panel-footer"><i>Ostatnia aktualizacja: 17-03-2018</i></div>
+            </div>
+        </div>
+
+        <!-- Konfiguracja pliku htaccess -->
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapse_6639366394">
+                    <b>Dopasowanie CSS pod konkretne urządzenia</b>
+                    <span class="label label-primary pull-right">CSS</span>
+                </a>
+            </div>
+            <div id="collapse_6639366394" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <p>
+                        Podstawowe <i>media queries</i> dla różnych urządzeń:
+                    </p>
+<pre>
+<code>
+/* 
+  ##Device = Desktops
+  ##Screen = 1281px to higher resolution desktops
+*/
+@media (min-width: 1281px) {
+
+}
+
+/* 
+  ##Device = Laptops, Desktops
+  ##Screen = B/w 1025px to 1280px
+*/
+@media (min-width: 1025px) and (max-width: 1280px) {
+
+}
+
+/* 
+  ##Device = Tablets, Ipads (portrait)
+  ##Screen = B/w 768px to 1024px
+*/
+@media (min-width: 768px) and (max-width: 1024px) {
+
+}
+
+/* 
+  ##Device = Tablets, Ipads (landscape)
+  ##Screen = B/w 768px to 1024px
+*/
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+
+}
+
+/* 
+  ##Device = Low Resolution Tablets, Mobiles (Landscape)
+  ##Screen = B/w 481px to 767px
+*/
+@media (min-width: 481px) and (max-width: 767px) {
+
+}
+
+/* 
+  ##Device = Most of the Smartphones Mobiles (Portrait)
+  ##Screen = B/w 320px to 479px
+*/
+@media (min-width: 320px) and (max-width: 480px) {
+
+}
+</code>
+</pre>
+                </div>
+                <div class="panel-footer"><i>Ostatnia aktualizacja: 31.05.2018</i></div>
             </div>
         </div>
 
@@ -389,7 +510,7 @@ ExpiresByType text/xml "access plus 60 minutes"
                         Jednak żeby nie było zbyt pięknie, na liście zasobów, które nie mają odpowiednich nagłówków lub mają ustawiony zbyt krótki „czas życia”, pozostało kilka pozycji:
                     </p>
                     <p>
-                        <img src="img/Help/GooglePageSpeed3.png" alt="Google PageSpeed" class="img img-thumbnail">									
+                        <img src="img/Help/GooglePageSpeed3.png" alt="Google PageSpeed" class="img img-thumbnail">
                     </p>
                     <p>
                         Trzy pierwsze to pliki z serwisu <a rel="nofollow" target="_blank" href="https://pl.gravatar.com/">Gravatar</a>, czwarty to skrypt zarządzający reklamami w filmach z YouTube, a ostatni to znany wszystkim skrypt Google Analytics. Co możemy z tym zrobić, skoro wszystkie te pliki znajdują się na zewnętrznych serwerach i nie mamy żadnego wpływu na ich nagłówki?
@@ -467,9 +588,9 @@ mod_gzip_item_exclude rspheader ^Content-Encoding:.*gzip.*
 &lt;?php
 ob_start('ob_gzhandler');
 $file = isset($_REQUEST['file']) ? $_REQUEST['file'] : null;
-if(!empty($file)) {
+if (!empty($file)) {
 $file = $_SERVER['DOCUMENT_ROOT'].'/'.$file;
-if(pathinfo($file, PATHINFO_EXTENSION) == 'svg' &amp;&amp; file_exists($file) &amp;&amp; mime_content_type($file) == 'image/svg+xml') {
+if (pathinfo($file, PATHINFO_EXTENSION) == 'svg' &amp;&amp; file_exists($file) &amp;&amp; mime_content_type($file) == 'image/svg+xml') {
 $content = file_get_contents($file);
 echo $content;
 }
@@ -553,7 +674,7 @@ add_action('wp_footer', 'wpzen_load_google_fonts_footer');
 function wpzen_async_scripts($tag, $handle, $src) {
 $async_scripts = array('webfont-loader');
 
-if(in_array($handle, $async_scripts)) {
+if (in_array($handle, $async_scripts)) {
 return '&lt;script type="text/javascript" src="'.$src.'" async="async"&gt;&lt;/script&gt;'."\n";
 }
 

@@ -1,14 +1,23 @@
 <?php
+/**
+ * Plik zawierajacy widok kalendarza platnosci dla stron internetowych.
+ * 
+ * @category Components
+ * @package  PastaCRM
+ * @author   Patryk Szulc <patryk-szulc@outlook.com>
+ * @license  CC BY-NC-ND 4.0 https://creativecommons.org/licenses/by-nc-nd/4.0/
+ * @link     https://github.com/psc1997/PastaCRM
+ */
 @session_start();
-require_once("inc/functions.php");
-if(checkUserPermissions(2) || checkUserPermissions(3)){
+require_once "inc/functions.php";
+if (checkUserPermissions(2) || checkUserPermissions(3)) {
     $siteTitle = "Kalendarz płatności";
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= showSiteTitle($siteTitle) ?></title>
-    <?php include_once("inc/head.php"); ?>
+    <title><?php echo getSiteTitle($siteTitle) ?></title>
+    <?php include_once "inc/head.php"; ?>
 
     <style>
         .calendarImage{
@@ -19,7 +28,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
 </head>
 <body>
     <div id="wrapper">
-        <?php include_once("inc/menus.php"); ?>
+        <?php include_once "inc/menu.php"; ?>
         <div id="page-wrapper">
             <div class="container-fluid">
 
@@ -27,7 +36,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">
-                            <?= $siteTitle ?>
+                            <?php echo $siteTitle ?>
                             <small>Just check pricing dates ...</small>
                         </h1>
                         <ol class="breadcrumb">
@@ -35,7 +44,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                 <i class="fa fa-dashboard"></i>  <a href="dashboard.php">Dashboard</a>
                             </li>
                             <li class="active">
-                                <i class="fa fa-calendar"></i> <?= $siteTitle ?>
+                                <i class="fa fa-calendar"></i> <?php echo $siteTitle ?>
                             </li>
                         </ol>
                     </div>
@@ -50,18 +59,18 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                     <div class="panel-body">
                         <?php
                             @$wyswietlany_rok = $_GET['year'];
-                            if($wyswietlany_rok == null)
+                            if ($wyswietlany_rok == null)
                                 $wyswietlany_rok = date("Y");
                         ?>
                     <div class="btn-group btn-group-justified">
-                            <a href='websitesCalendar.php?year=<?= $wyswietlany_rok-1 ?>' class='btn btn-primary'>
-                                <i class='fa fa-arrow-left'></i> <?= $wyswietlany_rok-1 ?>
+                            <a href='websitesCalendar.php?year=<?php echo $wyswietlany_rok-1 ?>' class='btn btn-primary'>
+                                <i class='fa fa-arrow-left'></i> <?php echo $wyswietlany_rok-1 ?>
                             </a>
                         <a id='aktualny_rok' class='btn btn-primary'>
-                            <i class='fa fa-calendar-check-o'></i> <b><?= $wyswietlany_rok ?></b>
+                            <i class='fa fa-calendar-check-o'></i> <b><?php echo $wyswietlany_rok ?></b>
                         </a>
-                            <a href='websitesCalendar.php?year=<?= $wyswietlany_rok+1 ?>' class='btn btn-primary'>
-                                <?= $wyswietlany_rok+1 ?> <i class='fa fa-arrow-right'></i>
+                            <a href='websitesCalendar.php?year=<?php echo $wyswietlany_rok+1 ?>' class='btn btn-primary'>
+                                <?php echo $wyswietlany_rok+1 ?> <i class='fa fa-arrow-right'></i>
                             </a>
                     </div>
 

@@ -1,19 +1,28 @@
 <?php
+/**
+ * Plik zawierajacy widok edycji serwera.
+ * 
+ * @category Components
+ * @package  PastaCRM
+ * @author   Patryk Szulc <patryk-szulc@outlook.com>
+ * @license  CC BY-NC-ND 4.0 https://creativecommons.org/licenses/by-nc-nd/4.0/
+ * @link     https://github.com/psc1997/PastaCRM
+ */
 @session_start();
-require_once("inc/functions.php");
-if(checkUserPermissions(2) || checkUserPermissions(3)){
+require_once "inc/functions.php";
+if (checkUserPermissions(2) || checkUserPermissions(3)) {
     $siteTitle = "Edytuj serwer";
     @$id_u = $_GET['id_u'];
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= showSiteTitle($siteTitle) ?></title>
-    <?php include_once("inc/head.php"); ?>
+    <title><?php echo getSiteTitle($siteTitle) ?></title>
+    <?php include_once "inc/head.php"; ?>
 </head>
 <body>
     <div id="wrapper">
-        <?php include_once("inc/menus.php"); ?>
+        <?php include_once "inc/menu.php"; ?>
         <div id="page-wrapper">
             <div class="container-fluid">
 
@@ -21,7 +30,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">
-                            <?= $siteTitle ?>
+                            <?php echo $siteTitle ?>
                             <small></small>
                         </h1>
                         <ol class="breadcrumb">
@@ -32,7 +41,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                 <i class="fa fa-server"></i> <a href="servers.php">Serwery i Hosting</a>
                             </li>
                             <li class="active">
-                                <i class="fa fa-edit"></i> <?= $siteTitle ?>
+                                <i class="fa fa-edit"></i> <?php echo $siteTitle ?>
                             </li>
                         </ol>
                     </div>
@@ -44,44 +53,44 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
             <div class="panel-heading"><i class="fa fa-server"></i> Dane serwera</div>
             <div class="panel-body">
             <?php
-                if(@$_GET['status'] == "delete"){
-                    if(deleteServer($id_u)){
-                        @header("Location: servers.php");
-                        exit(0);
+            if (@$_GET['status'] == "delete") {
+                if (deleteServer($id_u)) {
+                    @header("Location: servers.php");
+                    exit(0);
+                }
+            }
+            
+            if (isset($_POST['edit_server'])) {
+                $server_data = [
+                    "id_u" => $id_u,
+                    "id_server_provider" => null,
+                    "server_name" => $_POST['server_name'],
+                    "server_type" => $_POST['server_type'],
+                    "expires_date" => $_POST['expires_date'],
+                    "comment" => $_POST['comment']
+                ];
+
+                if (isset($_POST['new_provider_name'])) {
+                    if (addProvider($_POST['new_provider_name'])) {
+                        $server_data['id_server_provider'] = getLastProviderId();
                     }
+                } else {
+                    $server_data['id_server_provider'] = $_POST['id_server_provider'];
                 }
                 
-                if(isset($_POST['edit_server'])){
-                    $server_data = [
-                        "id_u" => $id_u,
-                        "id_server_provider" => null,
-                        "server_name" => $_POST['server_name'],
-                        "server_type" => $_POST['server_type'],
-                        "expires_date" => $_POST['expires_date'],
-                        "comment" => $_POST['comment']
-                    ];
+                editServer($server_data);
+            }
 
-                    if(isset($_POST['new_provider_name'])){
-                        if(addProvider($_POST['new_provider_name'])){
-                            $server_data['id_server_provider'] = getLastProviderId();
-                        }
-                    }else{
-                        $server_data['id_server_provider'] = $_POST['id_server_provider'];
+            if ($id_u) {
+                $server_data = getServerData($id_u);
+                if ($server_data != null) {
+                    $type_list = "";
+                    for ($i=0; $i<getServerTypeName(); $i++) {
+                        if ($server_data['type'] == $i)
+                            $type_list .= "<option value='$i' selected>".getServerTypeName($i)."</option>";
+                        else
+                            $type_list .= "<option value='$i'>".getServerTypeName($i)."</option>";
                     }
-                    
-                    editServer($server_data);
-                }
-
-                if($id_u){
-                    $server_data = getServerData($id_u);
-                    if($server_data != null){
-                        $type_list = "";
-                        for($i=0; $i<getServerTypeName(); $i++){
-                            if($server_data['type'] == $i)
-                                $type_list .= "<option value='$i' selected>".getServerTypeName($i)."</option>";
-                            else
-                                $type_list .= "<option value='$i'>".getServerTypeName($i)."</option>";
-                        }
             ?>
                 <form method="post">
                     <div class="form-group" id="provider_input">
@@ -101,21 +110,21 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                     </div>
                     <div class="form-group">
                         <label>Nazwa serwera: <font color="red">*</font></label>
-                        <input type="text" class="form-control" name="server_name" value="<?= $server_data['name']; ?>" minlength="4" maxlength="100" onkeyup="checkInputLength(this, 4, 100, true)" required />
+                        <input type="text" class="form-control" name="server_name" value="<?php echo $server_data['name']; ?>" minlength="4" maxlength="100" onkeyup="checkInputLength(this, 4, 100, true)" required />
                     </div>
                     <div class="form-group">
                         <label>Typ usługi: <font color="red">*</font></label>
                         <select class="form-control" name="server_type">
-                            <?= $type_list ?>
+                            <?php echo $type_list ?>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Data wygaśnięcia: <font color="red">*</font></label>
-                        <input type="date" class="form-control" name="expires_date" maxlength="10" value="<?= $server_data['expires_date']; ?>" required />
+                        <input type="date" class="form-control" name="expires_date" maxlength="10" value="<?php echo $server_data['expires_date']; ?>" required />
                     </div>
                     <div class="form-group">
                         <label>Opis:</label>
-                        <textarea class="form-control" name="comment" maxlength="255"><?= $server_data['comment']; ?></textarea>
+                        <textarea class="form-control" name="comment" maxlength="255"><?php echo $server_data['comment']; ?></textarea>
                         <font color="grey">
                             Dostępne znaczniki BB-Code: [hr], [b], [i], [u], [s], [center], [code], [color=red], [img] <i>link</i> [/img], [a] <i>link</i> [/a]
                         </font>
@@ -124,7 +133,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                     <a href="servers.php" class="btn btn-primary"><i class="fa fa-arrow-left"></i> Wróć</a>
                     <button type="submit" class="btn btn-success" name="edit_server"><i class="fa fa-save"></i> Zapisz</button>
                     
-                    <a href="?id_u=<?= $server_data['id_unique'] ?>&status=delete" class="btn btn-danger pull-right"><i class="fa fa-trash"></i> Usuń serwer</a>
+                    <a href="?id_u=<?php echo $server_data['id_unique'] ?>&status=delete" class="btn btn-danger pull-right"><i class="fa fa-trash"></i> Usuń serwer</a>
                 </form>
 
             </div>
@@ -165,12 +174,12 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
             </div>
         </div>
         <?php
-            }else{
-                showError("Wygląda na to, że serwer o podanym identyfikatorze nie istnieje!");
+                } else {
+                    showError("Wygląda na to, że serwer o podanym identyfikatorze nie istnieje!");
+                }
+            } else {
+                showError("Wygląda na to, że identyfikator serwera jest nieprawidłowy!");
             }
-        }else{
-            showError("Wygląda na to, że identyfikator serwera jest nieprawidłowy!");
-        }
         ?>
         <!-- KONIEC STRONY -->
 

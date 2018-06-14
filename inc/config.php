@@ -1,4 +1,14 @@
 <?php
+/**
+ * Plik zawierajacy ustawienia systemowe CRM.
+ * 
+ * @category Components
+ * @package  PastaCRM
+ * @author   Patryk Szulc <patryk-szulc@outlook.com>
+ * @license  CC BY-NC-ND 4.0 https://creativecommons.org/licenses/by-nc-nd/4.0/
+ * @link     https://github.com/psc1997/PastaCRM
+ */
+
     // Dane logowania do bazy danych MySQL
     DEFINE("DB_HOST", "localhost");
     DEFINE("DB_USER", "root");

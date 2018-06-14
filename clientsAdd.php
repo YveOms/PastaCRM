@@ -1,18 +1,27 @@
 <?php
+/**
+ * Plik zawierajacy widok dodawania klientow.
+ *
+ * @category Components
+ * @package  PastaCRM
+ * @author   Patryk Szulc <patryk-szulc@outlook.com>
+ * @license  CC BY-NC-ND 4.0 https://creativecommons.org/licenses/by-nc-nd/4.0/
+ * @link     https://github.com/psc1997/PastaCRM
+ */
 @session_start();
-require_once("inc/functions.php");
-if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)){
+require_once "inc/functions.php";
+if (checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)) {
     $siteTitle = "Dodaj nowego klienta";
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= showSiteTitle($siteTitle) ?></title>
-    <?php include_once("inc/head.php"); ?>
+    <title><?php echo getSiteTitle($siteTitle) ?></title>
+    <?php include_once "inc/head.php"; ?>
 </head>
 <body>
     <div id="wrapper">
-        <?php include_once("inc/menus.php"); ?>
+        <?php include_once "inc/menu.php"; ?>
         <div id="page-wrapper">
             <div class="container-fluid">
 
@@ -20,7 +29,7 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">
-                            <?= $siteTitle ?>
+                            <?php echo $siteTitle ?>
                         </h1>
                         <ol class="breadcrumb">
                             <li>
@@ -30,7 +39,7 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                                 <i class="fa fa-fw fa-users"></i> <a href="clients.php">Klienci</a>
                             </li>
                             <li class="active">
-                                <i class="fa fa-fw fa-user"></i> <?= $siteTitle ?>
+                                <i class="fa fa-fw fa-user"></i> <?php echo $siteTitle ?>
                             </li>
                         </ol>
                     </div>
@@ -43,18 +52,17 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                             <div class="panel-heading"><i class="fa fa-plus"></i> Formularz dodawania nowego klienta</div>
                             <div class="panel-body">
                                 <?php
-                                    if(isset($_POST['add_client'])){
-                                        $client_data = [
-                                            "first_name" => $_POST['first_name'],
-                                            "second_name" => $_POST['second_name'],
-                                            "phone" => $_POST['phone'],
-                                            "email" => $_POST['email'],
-                                            "address" => $_POST['address'],
-                                            "comment" => $_POST['comment']
-                                        ];
-                                        addClient($client_data);
-                                    }
-                                ?>
+                                if (isset($_POST['add_client'])) {
+                                    $client_data = [
+                                        "first_name" => $_POST['first_name'],
+                                        "second_name" => $_POST['second_name'],
+                                        "phone" => $_POST['phone'],
+                                        "email" => $_POST['email'],
+                                        "address" => $_POST['address'],
+                                        "comment" => $_POST['comment']
+                                    ];
+                                    addClient($client_data);
+                                } ?>
                                 <form method="post">
                                     <div class="form-group">
                                         <label>Imię <font color="red">*</font></label>
@@ -154,4 +162,5 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
     </div>
 </body>
 </html>
-<?php } ?>
+<?php
+} ?>

@@ -1,0 +1,141 @@
+@import url('https://fonts.googleapis.com/css?family=Black+Ops+One');
+
+.full-width{
+	width: 100%;
+}
+
+.btn-margin{
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
+.th-centered,
+.td-centered{
+    vertical-align: middle !important;
+    text-align: center !important;
+}
+
+.btn-square{
+    width: 150px;
+    height: 150px;
+    text-align: center;
+    vertical-align: middle;
+    font-weight: bold;
+    margin: 2px;
+}
+
+.icon-20px{
+    width: 20px;
+    height: 20px;
+}
+
+.input-success{
+    border: 1px solid #3C763D;
+    background: #F9FFF9;
+}
+
+.input-warning{
+    border: 1px solid #8A6D3B;
+    background: #FFFCF7;
+}
+
+.input-danger{
+    border: 1px solid #A94442;
+    background: #FFF7F7;
+}
+
+.input-group-addon-success{
+    color: #3C763D;
+    border: 1px solid #3C763D;
+    background: #F9FFF9;
+}
+
+.input-group-addon-warning{
+    color: #8A6D3B;
+    border: 1px solid #8A6D3B;
+    background: #FFFCF7;
+}
+
+.input-group-addon-danger{
+    color: #A94442;
+    border: 1px solid #A94442;
+    background: #FFF7F7;
+}
+
+#clock{
+    color: whitesmoke;
+    text-align: center;
+    font-family: 'Black Ops One', cursive;
+    text-transform: uppercase;
+    font-size: 26px;
+    margin: 10px;
+    border: 1px solid white;
+    padding: 10px;
+}
+
+.menu-icon{
+    color: white;
+    width: 25px !important;
+    height: 25px !important;
+    text-align: center !important;
+    line-height: 20px !important;
+    vertical-align: middle;
+    padding: 2px;
+    margin-right: 5px;
+}
+
+#menu-icon-dashboard{
+    background: #D7002E;
+}
+
+#menu-icon-websites{
+    background: #04AEDA;
+}
+
+#menu-icon-calendar{
+    background: #475C4D;
+}
+
+#menu-icon-servers{
+    background: #5D6A9E;
+}
+
+#menu-icon-computer-service{
+    background: #8C3EA2;
+}
+
+#menu-icon-clients{
+    background: #0E5D30;
+}
+
+#menu-icon-pricing-list{
+    background: #5E3BB9;
+}
+
+#menu-icon-statistics{
+    background: #9F6F07;
+}
+
+#menu-icon-transactions{
+    background: #3B5998;
+}
+
+#menu-icon-useful-tools{
+    background: #6B6B6B;
+}
+
+#menu-icon-templates{
+    background: #36C8F1;
+}
+
+#menu-icon-help{
+    background: #DA542D;
+}
+
+@media (min-width: 1025px) and (max-width: 1400px) {
+    .btn-square{
+        width: 145px;
+        height: 145px;
+        margin: 2px 0px 2px;
+    }
+}

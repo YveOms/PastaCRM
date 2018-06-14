@@ -1,19 +1,27 @@
-
 <?php
+/**
+ * Plik zawierajacy podstawowy widok szablonow dokumentow.
+ * 
+ * @category Components
+ * @package  PastaCRM
+ * @author   Patryk Szulc <patryk-szulc@outlook.com>
+ * @license  CC BY-NC-ND 4.0 https://creativecommons.org/licenses/by-nc-nd/4.0/
+ * @link     https://github.com/psc1997/PastaCRM
+ */
 @session_start();
-require_once("inc/functions.php");
-if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)){
+require_once "inc/functions.php";
+if (checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)) {
     $siteTitle = "Szablony dokumentów";
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= showSiteTitle($siteTitle) ?></title>
-    <?php include_once("inc/head.php"); ?>
+    <title><?php echo getSiteTitle($siteTitle) ?></title>
+    <?php include_once "inc/head.php"; ?>
 </head>
 <body>
     <div id="wrapper">
-        <?php include_once("inc/menus.php"); ?>
+        <?php include_once "inc/menu.php"; ?>
         <div id="page-wrapper">
             <div class="container-fluid">
 
@@ -21,7 +29,7 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">
-                            <?= $siteTitle ?>
+                            <?php echo $siteTitle ?>
                             <small>Ready to use!</small>
                         </h1>
                         <ol class="breadcrumb">
@@ -29,7 +37,7 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                                 <i class="fa fa-dashboard"></i>  <a href="dashboard.php">Dashboard</a>
                             </li>
                             <li class="active">
-                                <i class="fa fa-file-pdf-o"></i> <?= $siteTitle ?>
+                                <i class="fa fa-file-pdf-o"></i> <?php echo $siteTitle ?>
                             </li>
                         </ol>
                     </div>
@@ -48,11 +56,11 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                                         $doc_name = "PastaMedia - Dokument opisowy";
                                         $show_name = "Dokument<br>opisowy";
                                     ?>
-                                    <a href="templates/documents/<?= $doc_name ?>.pdf" target="_blank">
-                                        <img src="img/templates/<?= $doc_name ?>.png" alt="<?= $doc_name ?>" class="img img-thumbnail">
+                                    <a href="templates/documents/<?php echo $doc_name ?>.pdf" target="_blank">
+                                        <img src="img/templates/<?php echo $doc_name ?>.png" alt="<?php echo $doc_name ?>" class="img img-thumbnail">
                                     </a>
-                                    <div class="caption"><?= $show_name ?></div>
-                                    <a href="templates/documents/<?= $doc_name ?>.docx" class="btn btn-info btn-xs full-width"><i class="fa fa-download"></i> Microsoft Word</a>
+                                    <div class="caption"><?php echo $show_name ?></div>
+                                    <a href="templates/documents/<?php echo $doc_name ?>.docx" class="btn btn-info btn-xs full-width"><i class="fa fa-download"></i> Microsoft Word</a>
                                 </div>
 
                                 <div class="col-md-4 col-lg-3 text-center">
@@ -60,11 +68,11 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                                         $doc_name = "PastaMedia - Podsumowanie pracy - serwis komputerowy";
                                         $show_name = "Podsumowanie pracy<br>(serwis komputerowy)";
                                     ?>
-                                    <a href="templates/documents/<?= $doc_name ?>.pdf" target="_blank">
-                                        <img src="img/templates/<?= $doc_name ?>.png" alt="<?= $doc_name ?>" class="img img-thumbnail">
+                                    <a href="templates/documents/<?php echo $doc_name ?>.pdf" target="_blank">
+                                        <img src="img/templates/<?php echo $doc_name ?>.png" alt="<?php echo $doc_name ?>" class="img img-thumbnail">
                                     </a>
-                                    <div class="caption"><?= $show_name ?></div>
-                                    <a href="templates/documents/<?= $doc_name ?>.docx" class="btn btn-info btn-xs full-width"><i class="fa fa-download"></i> Microsoft Word</a>
+                                    <div class="caption"><?php echo $show_name ?></div>
+                                    <a href="templates/documents/<?php echo $doc_name ?>.docx" class="btn btn-info btn-xs full-width"><i class="fa fa-download"></i> Microsoft Word</a>
                                 </div>
 
                             </div>
@@ -76,11 +84,11 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                                         $doc_name = "PastaMedia - Umowa o wykonanie strony internetowej";
                                         $show_name = "Umowa o wykonanie<br>strony internetowej";
                                     ?>
-                                    <a href="templates/documents/<?= $doc_name ?>.pdf" target="_blank">
-                                        <img src="img/templates/<?= $doc_name ?>.png" alt="<?= $doc_name ?>" class="img img-thumbnail">
+                                    <a href="templates/documents/<?php echo $doc_name ?>.pdf" target="_blank">
+                                        <img src="img/templates/<?php echo $doc_name ?>.png" alt="<?php echo $doc_name ?>" class="img img-thumbnail">
                                     </a>
-                                    <div class="caption"><?= $show_name ?></div>
-                                    <a href="templates/documents/<?= $doc_name ?>.docx" class="btn btn-info btn-xs full-width"><i class="fa fa-download"></i> Microsoft Word</a>
+                                    <div class="caption"><?php echo $show_name ?></div>
+                                    <a href="templates/documents/<?php echo $doc_name ?>.docx" class="btn btn-info btn-xs full-width"><i class="fa fa-download"></i> Microsoft Word</a>
                                 </div>
 
                                 <div class="col-md-4 col-lg-3 text-center">
@@ -88,11 +96,11 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                                         $doc_name = "PastaMedia - Formularz oddania strony klientowi";
                                         $show_name = "Formularz oddania<br>strony klientowi";
                                     ?>
-                                    <a href="templates/documents/<?= $doc_name ?>.pdf" target="_blank">
-                                        <img src="img/templates/<?= $doc_name ?>.png" alt="<?= $doc_name ?>" class="img img-thumbnail">
+                                    <a href="templates/documents/<?php echo $doc_name ?>.pdf" target="_blank">
+                                        <img src="img/templates/<?php echo $doc_name ?>.png" alt="<?php echo $doc_name ?>" class="img img-thumbnail">
                                     </a>
-                                    <div class="caption"><?= $show_name ?></div>
-                                    <a href="templates/documents/<?= $doc_name ?>.docx" class="btn btn-info btn-xs full-width"><i class="fa fa-download"></i> Microsoft Word</a>
+                                    <div class="caption"><?php echo $show_name ?></div>
+                                    <a href="templates/documents/<?php echo $doc_name ?>.docx" class="btn btn-info btn-xs full-width"><i class="fa fa-download"></i> Microsoft Word</a>
                                 </div>
 
                                 <div class="col-md-4 col-lg-3 text-center">
@@ -100,11 +108,11 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                                         $doc_name = "PastaMedia - Podsumowanie pracy - strona internetowa";
                                         $show_name = "Podsumowanie pracy<br>(strony internetowe)";
                                     ?>
-                                    <a href="templates/documents/<?= $doc_name ?>.pdf" target="_blank">
-                                        <img src="img/templates/<?= $doc_name ?>.png" alt="<?= $doc_name ?>" class="img img-thumbnail">
+                                    <a href="templates/documents/<?php echo $doc_name ?>.pdf" target="_blank">
+                                        <img src="img/templates/<?php echo $doc_name ?>.png" alt="<?php echo $doc_name ?>" class="img img-thumbnail">
                                     </a>
-                                    <div class="caption"><?= $show_name ?></div>
-                                    <a href="templates/documents/<?= $doc_name ?>.docx" class="btn btn-info btn-xs full-width"><i class="fa fa-download"></i> Microsoft Word</a>
+                                    <div class="caption"><?php echo $show_name ?></div>
+                                    <a href="templates/documents/<?php echo $doc_name ?>.docx" class="btn btn-info btn-xs full-width"><i class="fa fa-download"></i> Microsoft Word</a>
                                 </div>
 
                                 <div class="col-md-4 col-lg-3 text-center">
@@ -112,11 +120,11 @@ if(checkUserPermissions(1) || checkUserPermissions(2) || checkUserPermissions(3)
                                         $doc_name = "PastaMedia - Formularz zakonczenia wspolpracy";
                                         $show_name = "Formularz zakończenia<br>współpracy";
                                     ?>
-                                    <a href="templates/documents/<?= $doc_name ?>.pdf" target="_blank">
-                                        <img src="img/templates/<?= $doc_name ?>.png" alt="<?= $doc_name ?>" class="img img-thumbnail">
+                                    <a href="templates/documents/<?php echo $doc_name ?>.pdf" target="_blank">
+                                        <img src="img/templates/<?php echo $doc_name ?>.png" alt="<?php echo $doc_name ?>" class="img img-thumbnail">
                                     </a>
-                                    <div class="caption"><?= $show_name ?></div>
-                                    <a href="templates/documents/<?= $doc_name ?>.docx" class="btn btn-info btn-xs full-width"><i class="fa fa-download"></i> Microsoft Word</a>
+                                    <div class="caption"><?php echo $show_name ?></div>
+                                    <a href="templates/documents/<?php echo $doc_name ?>.docx" class="btn btn-info btn-xs full-width"><i class="fa fa-download"></i> Microsoft Word</a>
                                 </div>
 
                             </div>

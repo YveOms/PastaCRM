@@ -1,18 +1,27 @@
 <?php
+/**
+ * Plik zawierajacy widok edycji cennika.
+ * 
+ * @category Components
+ * @package  PastaCRM
+ * @author   Patryk Szulc <patryk-szulc@outlook.com>
+ * @license  CC BY-NC-ND 4.0 https://creativecommons.org/licenses/by-nc-nd/4.0/
+ * @link     https://github.com/psc1997/PastaCRM
+ */
 @session_start();
-require_once("inc/functions.php");
-if(checkUserPermissions(3)){
+require_once "inc/functions.php";
+if (checkUserPermissions(3)) {
     $siteTitle = "Edycja Cennika";
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= showSiteTitle($siteTitle) ?></title>
-    <?php include_once("inc/head.php"); ?>
+    <title><?php echo getSiteTitle($siteTitle) ?></title>
+    <?php include_once "inc/head.php"; ?>
 </head>
 <body>
     <div id="wrapper">
-        <?php include_once("inc/menus.php"); ?>
+        <?php include_once "inc/menu.php"; ?>
         <div id="page-wrapper">
             <div class="container-fluid">
 
@@ -20,7 +29,7 @@ if(checkUserPermissions(3)){
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">
-                            <?= $siteTitle ?>
+                            <?php echo $siteTitle ?>
                             <small>"Money, it's a gas. Grab that cash with both hands and make a stash."</small>
                         </h1>
                         <ol class="breadcrumb">
@@ -31,7 +40,7 @@ if(checkUserPermissions(3)){
                                 <i class="fa fa-dollar"></i>  <a href="pricingList.php">Cennik</a>
                             </li>
                             <li class="active">
-                                <i class="fa fa-edit"></i> <?= $siteTitle ?>
+                                <i class="fa fa-edit"></i> <?php echo $siteTitle ?>
                             </li>
                         </ol>
                     </div>
@@ -45,26 +54,26 @@ if(checkUserPermissions(3)){
                             <div class="panel-body">
                             <div id="display_alert"></div>
                                 <?php
-                                    if(isset($_GET['delete'])){
-                                        deletePricingList($_GET['delete']);
-                                    }
+                                if (isset($_GET['delete'])) {
+                                    deletePricingList($_GET['delete']);
+                                }
 
-                                    if(isset($_POST['edit_pricing_list'])){
-                                        $service_name = $_POST['service_name'];
-                                        $service_description = $_POST['service_description'];
-                                        $service_price = $_POST['service_price'];
-                                        editPricingList($service_name, $service_description, $service_price);
-                                    }
+                                if (isset($_POST['edit_pricing_list'])) {
+                                    $service_name = $_POST['service_name'];
+                                    $service_description = $_POST['service_description'];
+                                    $service_price = $_POST['service_price'];
+                                    editPricingList($service_name, $service_description, $service_price);
+                                }
 
-                                    if(isset($_GET['add_new_pricing_list'])){
-                                        $pricing_data = [
-                                            "name" => $_GET['new_service_name'],
-                                            "description" => $_GET['new_service_description'],
-                                            "price" => $_GET['new_service_price'],
-                                            "category" => $_GET['new_service_category']
-                                        ];
-                                        addPricingList($pricing_data);
-                                    }
+                                if (isset($_GET['add_new_pricing_list'])) {
+                                    $pricing_data = [
+                                        "name" => $_GET['new_service_name'],
+                                        "description" => $_GET['new_service_description'],
+                                        "price" => $_GET['new_service_price'],
+                                        "category" => $_GET['new_service_category']
+                                    ];
+                                    addPricingList($pricing_data);
+                                }
                                 ?>
                                 <form method="POST">
                                     <?php
@@ -110,7 +119,7 @@ if(checkUserPermissions(3)){
                                                 <select class="form-control" name="new_service_category" required>
                                                     <?php
                                                         $categories = getPricingListTypesList();
-                                                        for($i=0; $i<sizeof($categories); $i++)
+                                                        for ($i=0; $i<sizeof($categories); $i++)
                                                             echo "<option value='".($i+1)."'>".$categories[$i]."</option>";
                                                     ?>
                                                 </select>
@@ -126,15 +135,15 @@ if(checkUserPermissions(3)){
                                     <br>Możesz tutaj edytować ceny dla wszystkich usług, a także dodawać oraz usuwać wybrane usługi.
                                 </p>
                                 <p>
-                                	<b>Do czego służy opis danej usługi?</b>
-                                	<br>W opisie możesz zawrzeć informacje o dodatkowych warunkach:
-                                	<br>np. <i>w przypadku odzyskiwania danych klient nie płaci, jeśli po ekspertyzie okazuje się, że danych nie da się odzyskać</i>
-                                	<br>lub też konkretne warunki danej usługi:
-                                	<br>np. <i>opieka techniczna "gold" nad stroną oznacza czas reakcji do 48h, natomiast opieka techniczna "bronze" to czas reakcji do 3 dni roboczych</i>.
+                                    <b>Do czego służy opis danej usługi?</b>
+                                    <br>W opisie możesz zawrzeć informacje o dodatkowych warunkach:
+                                    <br>np. <i>w przypadku odzyskiwania danych klient nie płaci, jeśli po ekspertyzie okazuje się, że danych nie da się odzyskać</i>
+                                    <br>lub też konkretne warunki danej usługi:
+                                    <br>np. <i>opieka techniczna "gold" nad stroną oznacza czas reakcji do 48h, natomiast opieka techniczna "bronze" to czas reakcji do 3 dni roboczych</i>.
                                 </p>
                                 <p>
-                                	<b>Zasada tworzenia dobrego tytułu usługi</b>
-                                	<br>Dobry tytuł musi jasno opisywać daną usługę. Każdy tytuł można wyjaśnić i doprecyzować w opisie umieszczonym zaraz pod nim.
+                                    <b>Zasada tworzenia dobrego tytułu usługi</b>
+                                    <br>Dobry tytuł musi jasno opisywać daną usługę. Każdy tytuł można wyjaśnić i doprecyzować w opisie umieszczonym zaraz pod nim.
                                 </p>
                             </div>
                         </div>

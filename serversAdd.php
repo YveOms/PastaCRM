@@ -1,18 +1,27 @@
 <?php
+/**
+ * Plik zawierajacy widok dodawania serwera.
+ * 
+ * @category Components
+ * @package  PastaCRM
+ * @author   Patryk Szulc <patryk-szulc@outlook.com>
+ * @license  CC BY-NC-ND 4.0 https://creativecommons.org/licenses/by-nc-nd/4.0/
+ * @link     https://github.com/psc1997/PastaCRM
+ */
 @session_start();
-require_once("inc/functions.php");
-if(checkUserPermissions(2) || checkUserPermissions(3)){
+require_once "inc/functions.php";
+if (checkUserPermissions(2) || checkUserPermissions(3)) {
     $siteTitle = "Dodaj nowy serwer";
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= showSiteTitle($siteTitle) ?></title>
-    <?php include_once("inc/head.php"); ?>
+    <title><?php echo getSiteTitle($siteTitle) ?></title>
+    <?php include_once "inc/head.php"; ?>
 </head>
 <body>
     <div id="wrapper">
-        <?php include_once("inc/menus.php"); ?>
+        <?php include_once "inc/menu.php"; ?>
         <div id="page-wrapper">
             <div class="container-fluid">
 
@@ -20,7 +29,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">
-                            <?= $siteTitle ?>
+                            <?php echo $siteTitle ?>
                             <small>For more files and databases!</small>
                         </h1>
                         <ol class="breadcrumb">
@@ -31,7 +40,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                 <i class="fa fa-server"></i>  <a href="servers.php">Serwery i Hosting</a>
                             </li>
                             <li class="active">
-                                <i class="fa fa-plus-square"></i> <?= $siteTitle ?>
+                                <i class="fa fa-plus-square"></i> <?php echo $siteTitle ?>
                             </li>
                         </ol>
                     </div>
@@ -44,30 +53,30 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                             <div class="panel-heading"><i class="fa fa-plus"></i> Formularz dodawania nowego serwera</div>
                             <div class="panel-body">
                                 <?php
-                                    if(isset($_POST['add_server'])){
-                                        $server_data = [
-                                            "id_server_provider" => null,
-                                            "server_name" => $_POST['server_name'],
-                                            "expires_date" => $_POST['expires_date'],
-                                            "type" => $_POST['type'],
-                                            "comment" => $_POST['comment']
-                                        ];
+                                if (isset($_POST['add_server'])) {
+                                    $server_data = [
+                                        "id_server_provider" => null,
+                                        "server_name" => $_POST['server_name'],
+                                        "expires_date" => $_POST['expires_date'],
+                                        "type" => $_POST['type'],
+                                        "comment" => $_POST['comment']
+                                    ];
 
-                                        if(isset($_POST['new_provider_name'])){
-                                            if(addProvider($_POST['new_provider_name'])){
-                                                $server_data['id_server_provider'] = getLastProviderId();
-                                            }
-                                        }else{
-                                            $server_data['id_server_provider'] = $_POST['id_server_provider'];
+                                    if (isset($_POST['new_provider_name'])) {
+                                        if (addProvider($_POST['new_provider_name'])) {
+                                            $server_data['id_server_provider'] = getLastProviderId();
                                         }
-                                        
-                                        addServer($server_data);
+                                    } else {
+                                        $server_data['id_server_provider'] = $_POST['id_server_provider'];
                                     }
+                                    
+                                    addServer($server_data);
+                                }
 
-                                    $type_list = "";
-                                    for($i=0; $i<getServerTypeName(); $i++){
-                                        $type_list .= "<option value='$i'>".getServerTypeName($i)."</option>";
-                                    }
+                                $type_list = "";
+                                for ($i=0; $i<getServerTypeName(); $i++) {
+                                    $type_list .= "<option value='$i'>".getServerTypeName($i)."</option>";
+                                }
                                 ?>
                                 <form method="POST">
                                 <div class="form-group" id="provider_input">
@@ -93,7 +102,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                         <label>Typ usługi: <font color="red">*</font></label>
                                         <select class="form-control" name="type">
                                             <option value="x">- - - - -</option>
-                                            <?= $type_list ?>
+                                            <?php echo $type_list ?>
                                         </select>
                                     </div>
                                     <div class="form-group">

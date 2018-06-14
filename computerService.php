@@ -1,18 +1,27 @@
 <?php
+/**
+ * Plik zawierajacy podstawowy widok zgloszen serwisu komputerowego.
+ * 
+ * @category Components
+ * @package  PastaCRM
+ * @author   Patryk Szulc <patryk-szulc@outlook.com>
+ * @license  CC BY-NC-ND 4.0 https://creativecommons.org/licenses/by-nc-nd/4.0/
+ * @link     https://github.com/psc1997/PastaCRM
+ */
 @session_start();
-require_once("inc/functions.php");
-if(checkUserPermissions(1) || checkUserPermissions(3)){
+require_once "inc/functions.php";
+if (checkUserPermissions(1) || checkUserPermissions(3)) {
     $siteTitle = "Serwis Komputerowy";
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= showSiteTitle($siteTitle) ?></title>
-    <?php include_once("inc/head.php"); ?>
+    <title><?php echo getSiteTitle($siteTitle) ?></title>
+    <?php include_once "inc/head.php"; ?>
 </head>
 <body>
     <div id="wrapper">
-        <?php include_once("inc/menus.php"); ?>
+        <?php include_once "inc/menu.php"; ?>
         <div id="page-wrapper">
             <div class="container-fluid">
 
@@ -20,7 +29,7 @@ if(checkUserPermissions(1) || checkUserPermissions(3)){
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">
-                            <?= $siteTitle ?>
+                            <?php echo $siteTitle ?>
                             <small>Software & Hardware</small>
                         </h1>
                         <ol class="breadcrumb">
@@ -28,7 +37,7 @@ if(checkUserPermissions(1) || checkUserPermissions(3)){
                                 <i class="fa fa-dashboard"></i>  <a href="dashboard.php">Dashboard</a>
                             </li>
                             <li class="active">
-                                <i class="fa fa-laptop"></i> <?= $siteTitle ?>
+                                <i class="fa fa-laptop"></i> <?php echo $siteTitle ?>
                             </li>
                         </ol>
                     </div>
@@ -42,6 +51,12 @@ if(checkUserPermissions(1) || checkUserPermissions(3)){
                             <i class="fa fa-laptop"></i> Lista zgłoszeń
                         </div>
                             <div class="panel-body">
+                                <div class="form-group">
+                                    <div class="input-group mb-2 mr-sm-2 mb-sm-0">
+                                        <div class="input-group-addon"><i class="fa fa-fw fa-search"></i></div>
+                                        <input type="text" class="form-control" id="client_search_input" placeholder="Szukaj zgłoszenia po nazwisku klienta..." onkeyup="searchInsideTable('client_search_input', 'computer_service__table', 1)">
+                                    </div>
+                                </div>
                                 <div class="table-responsive">
                                         <?php
                                             showComputerServiceList();

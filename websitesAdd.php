@@ -1,18 +1,27 @@
 <?php
+/**
+ * Plik zawierajacy widok dodawania nowych stron internetowych.
+ * 
+ * @category Components
+ * @package  PastaCRM
+ * @author   Patryk Szulc <patryk-szulc@outlook.com>
+ * @license  CC BY-NC-ND 4.0 https://creativecommons.org/licenses/by-nc-nd/4.0/
+ * @link     https://github.com/psc1997/PastaCRM
+ */
 @session_start();
-require_once("inc/functions.php");
-if(checkUserPermissions(2) || checkUserPermissions(3)){
+require_once "inc/functions.php";
+if (checkUserPermissions(2) || checkUserPermissions(3)) {
     $siteTitle = "Dodawanie nowej strony internetowej";
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= showSiteTitle($siteTitle) ?></title>
-    <?php include_once("inc/head.php"); ?>
+    <title><?php echo getSiteTitle($siteTitle) ?></title>
+    <?php include_once "inc/head.php"; ?>
 </head>
 <body>
     <div id="wrapper">
-        <?php include_once("inc/menus.php"); ?>
+        <?php include_once "inc/menu.php"; ?>
         <div id="page-wrapper">
             <div class="container-fluid">
 
@@ -20,7 +29,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">
-                            <?= $siteTitle ?>
+                            <?php echo $siteTitle ?>
                             <small>Just made Internet better place!</small>
                         </h1>
                         <ol class="breadcrumb">
@@ -31,7 +40,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                 <i class="fa fa-globe"></i>  <a href="websites.php">Strony internetowe</a>
                             </li>
                             <li class="active">
-                                <i class="fa fa-plus-square"></i> <?= $siteTitle ?>
+                                <i class="fa fa-plus-square"></i> <?php echo $siteTitle ?>
                             </li>
                         </ol>
                     </div>
@@ -44,43 +53,43 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                             <div class="panel-heading"><i class="fa fa-globe"></i> Formularz dodawania nowej strony</div>
                             <div class="panel-body">
                             <?php
-                                if(isset($_POST['add_new_website'])){
-                                    $site_data = [
-                                        "website_name" => $_POST['website_name'],
-                                        "website_address" => $_POST['website_address'],
-                                        "server" => $_POST['server'],
-                                        "cms" => $_POST['cms'],
-                                        "status" => $_POST['status'],
-                                        "contact_person" => @$_POST['contact_person']
+                            if (isset($_POST['add_new_website'])) {
+                                $site_data = [
+                                    "website_name" => $_POST['website_name'],
+                                    "website_address" => $_POST['website_address'],
+                                    "server" => $_POST['server'],
+                                    "cms" => $_POST['cms'],
+                                    "status" => $_POST['status'],
+                                    "contact_person" => @$_POST['contact_person']
+                                ];
+
+                                if (isset($_POST['client_first_name']) && isset($_POST['client_second_name'])) {
+                                    $client_data = [
+                                        "first_name" => $_POST['client_first_name'],
+                                        "second_name" => $_POST['client_second_name'],
+                                        "phone" => $_POST['client_phone'],
+                                        "email" => $_POST['client_mail']
                                     ];
-
-                                    if(isset($_POST['client_first_name']) && isset($_POST['client_second_name'])){
-                                        $client_data = [
-                                            "first_name" => $_POST['client_first_name'],
-                                            "second_name" => $_POST['client_second_name'],
-                                            "phone" => $_POST['client_phone'],
-                                            "email" => $_POST['client_mail']
-                                        ];
-                                        
-                                        if(addClient($client_data)){
-                                            $site_data['contact_person'] = getLastClientId();
-                                        }
-                                    }else{
-                                        $site_data['contact_person'] = getClientId($site_data['contact_person']);
-                                    }
                                     
-                                    addWebsite($site_data);
+                                    if (addClient($client_data)) {
+                                        $site_data['contact_person'] = getLastClientId();
+                                    }
+                                } else {
+                                    $site_data['contact_person'] = getClientId($site_data['contact_person']);
                                 }
+                                
+                                addWebsite($site_data);
+                            }
 
-                                $cms_list = "";
-                                $status_list = "";
-                                for($i=0; $i<getCmsName(); $i++){
-                                    $cms_list .= "<option value='$i'>".getCmsName($i)."</option>";
-                                }
+                            $cms_list = "";
+                            $status_list = "";
+                            for ($i=0; $i<getCmsName(); $i++) {
+                                $cms_list .= "<option value='$i'>".getCmsName($i)."</option>";
+                            }
 
-                                for($i=0; $i<getStatusName(); $i++){
-                                    $status_list .= "<option value='$i'>".getStatusName($i)."</option>";
-                                }
+                            for ($i=0; $i<getStatusName(); $i++) {
+                                $status_list .= "<option value='$i'>".getStatusName($i)."</option>";
+                            }
                             ?>
                                 <form method="post">
                                     <div class="form-group">
@@ -119,7 +128,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                             <div class="input-group-addon"><i class="fa fa-fw fa-wordpress"></i></div>
                                             <select name="cms" class="selectpicker" data-width="100%">
                                                 <option value="">- - -</option>
-                                                <?= $cms_list; ?>
+                                                <?php echo $cms_list; ?>
                                             </select>
                                         </div>
                                     </div>
@@ -130,7 +139,7 @@ if(checkUserPermissions(2) || checkUserPermissions(3)){
                                             <div class="input-group-addon"><i class="fa fa-fw fa-cogs"></i></div>
                                             <select name="status" class="selectpicker" data-width="100%">
                                                 <option value="">- - -</option>
-                                                <?= $status_list ?>
+                                                <?php echo $status_list ?>
                                             </select>
                                         </div>
                                     </div>

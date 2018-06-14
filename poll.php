@@ -1,21 +1,30 @@
 <?php
+/**
+ * Plik zawierajacy podstawowy widok wynikow ankiety.
+ * 
+ * @category Components
+ * @package  PastaCRM
+ * @author   Patryk Szulc <patryk-szulc@outlook.com>
+ * @license  CC BY-NC-ND 4.0 https://creativecommons.org/licenses/by-nc-nd/4.0/
+ * @link     https://github.com/psc1997/PastaCRM
+ */
 @session_start();
-require_once("inc/functions.php");
-if(checkUserPermissions(3)){
+require_once "inc/functions.php";
+if (checkUserPermissions(3)) {
     $siteTitle = "Ankieta";
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <title>
-        <?= showSiteTitle($siteTitle) ?>
+        <?php echo getSiteTitle($siteTitle) ?>
     </title>
-    <?php include_once("inc/head.php"); ?>
+    <?php include_once "inc/head.php"; ?>
 </head>
 
 <body>
     <div id="wrapper">
-        <?php include_once("inc/menus.php"); ?>
+        <?php include_once "inc/menu.php"; ?>
         <div id="page-wrapper">
             <div class="container-fluid">
 
@@ -23,7 +32,7 @@ if(checkUserPermissions(3)){
             <div class="row">
                 <div class="col-lg-12">
                     <h1 class="page-header">
-                        <?= $siteTitle ?>
+                        <?php echo $siteTitle ?>
                         <small>Jak klienci oceniają wykonaną pracę?</small>
                     </h1>
                     <ol class="breadcrumb">
@@ -33,7 +42,7 @@ if(checkUserPermissions(3)){
                         </li>
                         <li class="active">
                             <i class="fa fa-pie-chart"></i>
-                            <?= $siteTitle ?>
+                            <?php echo $siteTitle ?>
                         </li>
                     </ol>
                 </div>
@@ -42,6 +51,18 @@ if(checkUserPermissions(3)){
 <!-- STRONA -->
 <div class="row">
     <div class="col-md-8">
+
+        <?php
+        if (@$_GET['redn'] == 1) {
+            $files = glob('temp/*');
+            foreach ($files as $key => $value) {
+                if (is_file($value)) {
+                    unlink($value);
+                }
+            }
+            showSuccess("Lokalne pliki tymczasowe zostały usunięte!");
+        }
+        ?>
 
         <!-- PANEL: STATYSTYKI OGOLNE -->
         <div class="panel panel-default">
@@ -525,12 +546,14 @@ if(checkUserPermissions(3)){
             </div>
             <div class="panel-body">
                 <div class="alert alert-info">
-                    Data pobrania statystyk z serwera: <?= substr(file_get_contents("temp/all_satisfaction.json"), 0, 10) ?>
+                    Data pobrania statystyk z serwera: <?php echo substr(file_get_contents("temp/all_satisfaction.json"), 0, 10) ?>
                     <br><i>Podana data odnosi się do pierwszego wykresu, nie mniej jednak przy prawidłowej konfiguracji systemu wszystkie wykresy odświeżają się równocześnie.</i>
                 </div>
                 <button class="btn btn-primary full-width" disabled>Pobierz statystyki jako plik PDF</button>
                 <hr>
                 <button class="btn btn-primary full-width" onclick="javascript:window.print();">Drukuj stronę ze statystykami</button>
+                <hr>
+                <a href="?redn=1" class="btn btn-primary full-width">Wymuś ponowne pobranie statystyk z serwera</a>
             </div>
         </div>
 
@@ -546,19 +569,19 @@ if(checkUserPermissions(3)){
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <a data-toggle="collapse" href="#collapse_websites">
-                                <i class="fa fa-globe"></i> Strony internetowe <label class="label label-info pull-right"><?= sizeof($arr_data); ?> komentarzy</label>
+                                <i class="fa fa-globe"></i> Strony internetowe <label class="label label-info pull-right"><?php echo sizeof($arr_data); ?> komentarzy</label>
                             </a>
                         </div>
                         <div id="collapse_websites" class="panel-collapse collapse">
                             <ul class="list-group">
                                 <?php
-                                    if(sizeof($arr_data) > 0){
-                                        foreach ($arr_data as $key => $value) {
-                                            echo "<li class='list-group-item'>".$value."</li>";
-                                        }
-                                    }else{
-                                        echo "<li class='list-group-item'><i>Brak komentarzy w podanej kategorii...</i></li>";
+                                if (sizeof($arr_data) > 0) {
+                                    foreach ($arr_data as $key => $value) {
+                                        echo "<li class='list-group-item'>".$value."</li>";
                                     }
+                                } else {
+                                    echo "<li class='list-group-item'><i>Brak komentarzy w podanej kategorii...</i></li>";
+                                }
                                 ?>
                             </ul>
                         </div>
@@ -571,19 +594,19 @@ if(checkUserPermissions(3)){
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <a data-toggle="collapse" href="#collapse_computer_service">
-                                <i class="fa fa-laptop"></i> Serwis komputerowy <label class="label label-info pull-right"><?= sizeof($arr_data); ?> komentarzy</label>
+                                <i class="fa fa-laptop"></i> Serwis komputerowy <label class="label label-info pull-right"><?php echo sizeof($arr_data); ?> komentarzy</label>
                             </a>
                         </div>
                         <div id="collapse_computer_service" class="panel-collapse collapse">
                             <ul class="list-group">
                                 <?php
-                                    if(sizeof($arr_data) > 0){
-                                        foreach ($arr_data as $key => $value) {
-                                            echo "<li class='list-group-item'>".$value."</li>";
-                                        }
-                                    }else{
-                                        echo "<li class='list-group-item'><i>Brak komentarzy w podanej kategorii...</i></li>";
+                                if (sizeof($arr_data) > 0) {
+                                    foreach ($arr_data as $key => $value) {
+                                        echo "<li class='list-group-item'>".$value."</li>";
                                     }
+                                } else {
+                                    echo "<li class='list-group-item'><i>Brak komentarzy w podanej kategorii...</i></li>";
+                                }
                                 ?>
                             </ul>
                         </div>
@@ -596,19 +619,19 @@ if(checkUserPermissions(3)){
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <a data-toggle="collapse" href="#collapse_other">
-                                <i class="fa fa-ellipsis-h"></i> Inne <label class="label label-info pull-right"><?= sizeof($arr_data); ?> komentarzy</label>
+                                <i class="fa fa-ellipsis-h"></i> Inne <label class="label label-info pull-right"><?php echo sizeof($arr_data); ?> komentarzy</label>
                             </a>
                         </div>
                         <div id="collapse_other" class="panel-collapse collapse">
                             <ul class="list-group">
                                 <?php
-                                    if(sizeof($arr_data) > 0){
-                                        foreach ($arr_data as $key => $value) {
-                                            echo "<li class='list-group-item'>".$value."</li>";
-                                        }
-                                    }else{
-                                        echo "<li class='list-group-item'><i>Brak komentarzy w podanej kategorii...</i></li>";
+                                if (sizeof($arr_data) > 0) {
+                                    foreach ($arr_data as $key => $value) {
+                                        echo "<li class='list-group-item'>".$value."</li>";
                                     }
+                                } else {
+                                    echo "<li class='list-group-item'><i>Brak komentarzy w podanej kategorii...</i></li>";
+                                }
                                 ?>
                             </ul>
                         </div>
