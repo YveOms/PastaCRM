@@ -192,6 +192,9 @@ if (checkUserPermissions(1) || checkUserPermissions(2) ||checkUserPermissions(3)
                                 Skopiuj otrzymaną komendę, wklej ją do konsoli Linux oraz wykonaj (upewnij się, że wykonujesz komendę w katalogu z kluczami).
                             </li>
                         </ol>
+                        <p>
+                            <img src="img/help/wdrozenie-ssl-checklista.png" alt="Checklista wdrozenia SSL" class="img-thumbnail">
+                        </p>
                     </div>
                     <div class="panel-footer"><i>Ostatnia aktualizacja: xx-xx-xxxx</i></div>
                 </div>

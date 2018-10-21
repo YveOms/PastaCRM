@@ -21,6 +21,7 @@
  * =    b) Modyfikacja danych,
  * =    c) Usuwanie danych,
  * =    d) Wyswietlanie danych,
+ * =    e) Kopia danych
  * = 2. Funkcje walidujace i sprawdzajace.
  * = 3. Funkcje wyswietlajace komunikaty, bledy, etc...
  * = 4. Inne funkcje.
@@ -2990,6 +2991,106 @@ function showRandomQuote()
 function getSiteTitle(string $title)
 {
     return "PastaCRM | ".$title;
+}
+
+/* ########################################
+ * # 1d. Kopiowanie danych
+ * ######################################## */
+
+ /**
+  * Funkcja usuwajaca wszystkie pliki kopii zapasowej.
+  *
+  * @version 1.0.0
+  * @return  void
+  */
+function deleteBackups()
+{
+    $files = glob(substr(__DIR__, 0, -4).'/backups/*');
+    foreach($files as $file){
+        if(is_file($file)){
+            unlink($file);
+        }
+    }
+}
+
+/**
+ * Funkcja tworzaca kopie zapasowa bazy danych oraz strony.
+ *
+ * @param string $config
+ * @version      1.0.0
+ * @return       void
+ */
+function createBackup(string $config)
+{
+    $ini_config = ['max_execution_time' => ini_get('max_execution_time'), 'memory_limit' => ini_get('memory_limit')];
+    $datetime = date('d-m-Y_h-i-s');
+    $path_destination = substr(__DIR__, 0, -4).'/backups/';
+ 
+    @$last_file = substr(end(array_diff(scandir($path_destination), array('.', '..'))), 0, 3);
+    if ($last_file == null) {
+        $last_file = "001";
+    } else {
+        $last_file += "1";
+        $last_file = str_pad($last_file, 3, "0", STR_PAD_LEFT);
+    }
+    $file_name = $last_file."_".date('Y-m-d_H-i-s');
+
+    if ($config == 'all' || $config == 'mysql') {
+        exec('ipconfig /all > '.substr(__DIR__, 0, -4).'/backups/'.$file_name.'_mysql.sql');
+
+        $file_size = filesize(substr(__DIR__, 0, -4).'/backups/'.$file_name.'_mysql.sql');
+        if ($file_size < 10) {
+            showWarning('Kopia zapasowa MySQL została utworzona, ale plik wygląda na pusty ('.$file_size.'KB)...');
+        } else {
+            showSuccess('Pomyślnie utworzono kopię zapasową MySQL! (plik zajmuje '.round(($file_size/1000), 2).'KB miejsca na dysku)');
+        }
+    }
+
+    if ($config == 'all' || $config == 'files') {
+        try {
+            ini_set('max_execution_time', 600);
+            ini_set('memory_limit', '1024M');
+            $source = substr(__DIR__, 0, -4).'/';
+            $destination = $path_destination.$file_name.'_files.zip';
+            if (extension_loaded('zip')) {
+                if (file_exists($source)) {
+                    $zip = new ZipArchive();
+                    if ($zip->open($destination, ZIPARCHIVE::CREATE)) {
+                        $source = realpath($source);
+                        if (is_dir($source)) {
+                            $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source, RecursiveDirectoryIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST);
+                            foreach ($files as $file) {
+                                if (strpos($file, 'backups') == null && strpos($file, '.git') == null) {
+                                    $file = realpath($file);
+                                    if (is_dir($file)) {
+                                        $zip->addEmptyDir(str_replace($source . '/', '', $file . '/'));
+                                    } else if (is_file($file)) {
+                                        $zip->addFromString(str_replace($source . '/', '', $file), file_get_contents($file));
+                                    }
+                                }
+                            }
+                        } else if (is_file($source)) {
+                            $zip->addFromString(basename($source), file_get_contents($source));
+                        }
+                    }
+                    $zip->close();
+
+                    $file_size = filesize(substr(__DIR__, 0, -4).'/backups/'.$file_name.'_files.zip');
+                    if ($file_size < 10) {
+                        showWarning('Kopia zapasowa plików została utworzona, ale plik wygląda na pusty ('.$file_size.'KB)...');
+                    } else {
+                        showSuccess('Pomyślnie utworzono kopię zapasową plików! (plik zajmuje '.round((($file_size/1000)/1000), 2).'MB miejsca na dysku)');
+                    }
+
+                    return true;
+                }
+            }
+            return false;
+        } catch (Exception $e) {
+            echo 'Podczas wykonywania czynności wystąpiły następujące błędy: ',  $e->getMessage(), "\n";
+        }
+    }
+
 }
 
 /* ########################################

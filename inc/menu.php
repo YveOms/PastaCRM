@@ -22,6 +22,9 @@
             <li>
                 <a href="siteLog.php"><i class="fa fa-fw fa-clock-o"></i> Log</a>
             </li>
+            <li>
+                <a href="backup.php"><i class="fa fa-fw fa-archive"></i> Kopia zapasowa</a>
+            </li>
             </ul>
         </li>
         <li>
