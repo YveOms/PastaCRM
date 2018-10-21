@@ -3036,7 +3036,7 @@ function createBackup(string $config)
     $file_name = $last_file."_".date('Y-m-d_H-i-s');
 
     if ($config == 'all' || $config == 'mysql') {
-        exec('ipconfig /all > '.substr(__DIR__, 0, -4).'/backups/'.$file_name.'_mysql.sql');
+        exec('mysqldump --user='.DB_USER.' --password=\''.DB_PASSWORD.'\' --host='.DB_HOST.' '.DB_NAME.' > '.substr(__DIR__, 0, -4).'/backups/'.$file_name.'_mysql.sql');
 
         $file_size = filesize(substr(__DIR__, 0, -4).'/backups/'.$file_name.'_mysql.sql');
         if ($file_size < 10) {
